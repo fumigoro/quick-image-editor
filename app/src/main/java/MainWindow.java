@@ -29,6 +29,7 @@ import java.awt.event.*;
 import java.util.Calendar;
 
 import java.awt.Insets;
+import com.google.gson.Gson;
 
 @SuppressWarnings("serial") // java.ioをimportしているが、シリアライズは必要ないので警告が出ないようにコレ書いておく
 public class MainWindow extends JFrame {
