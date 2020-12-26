@@ -37,9 +37,14 @@ import java.io.*;
 
 import com.google.gson.Gson;
 
+import quick.image.editor.Setting;
+
 // import com.google.gson.annotations.*;
 
 // import com.google.gson.stream.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 
 
 
@@ -74,32 +79,20 @@ public class MainWindow extends JFrame {
 
 
         /**
-         * Gsonを用いてjsonファイルを読み込む
+         * Jacsonを用いてjsonファイルを読み込む
          *
          */
         FileReader fr;
-        
-        
-        Data response;
-        try{
-            fr = new FileReader("src/main/resources/settings.json");
-            gson  = new Gson();
-        //要素をパース
-        // response= gson.fromJson(fr, Data.class);
-        // System.out.print(response.getDefaults());
-
-        
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        
-        // System.out.println(response.getIde());
-        // JSONからStringへの変換 
-        // String str = gson.fromJson("\"hello\"", String.class);
-        // System.out.println("User: " + user.email + " / " + user.fullname);
-        // Post post = gson.fromJson(jsonStr, Post.class);
-
-
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+			JsonNode node = mapper.readTree(new File("src/main/resources/settings.json"));
+			String number = node.get("defaults").get("format").asText();
+			System.out.println(number);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
         /**
          * リスナーの設定 各部品ごとに個別のリスナー(匿名)クラスを使用し、その中で各処理のメソッドを呼ぶ。
