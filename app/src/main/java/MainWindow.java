@@ -29,7 +29,19 @@ import java.awt.event.*;
 import java.util.Calendar;
 
 import java.awt.Insets;
+
+import com.google.gson.*;
+
+
+import java.io.*;
+
 import com.google.gson.Gson;
+
+// import com.google.gson.annotations.*;
+
+// import com.google.gson.stream.*;
+
+
 
 @SuppressWarnings("serial") // java.ioをimportしているが、シリアライズは必要ないので警告が出ないようにコレ書いておく
 public class MainWindow extends JFrame {
@@ -46,7 +58,8 @@ public class MainWindow extends JFrame {
     JMenuBar menubar;
     JMenu menu_1, menu_2, menu_3;
     JMenuItem menuitem1_1, menuitem1_2,menuitem1_3, menuitem3_resetCount, menuitem3_setDefaultDir;
-
+    String format = "png";//画像のファイル形式
+    Gson gson;
     // その他変数
     int imageCounter;// 出力した画像の枚数をカウントする
 
@@ -54,9 +67,39 @@ public class MainWindow extends JFrame {
      * コンストラクタ
      */
     MainWindow() {
+        // MainWindow mw = new MainWindow();
         // 各種UI部品をつくる
         createMainWindow();
         imageCounter = 0;
+
+
+        /**
+         * Gsonを用いてjsonファイルを読み込む
+         *
+         */
+        FileReader fr;
+        
+        
+        Data response;
+        try{
+            fr = new FileReader("src/main/resources/settings.json");
+            gson  = new Gson();
+        //要素をパース
+        // response= gson.fromJson(fr, Data.class);
+        // System.out.print(response.getDefaults());
+
+        
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        
+        // System.out.println(response.getIde());
+        // JSONからStringへの変換 
+        // String str = gson.fromJson("\"hello\"", String.class);
+        // System.out.println("User: " + user.email + " / " + user.fullname);
+        // Post post = gson.fromJson(jsonStr, Post.class);
+
+
 
         /**
          * リスナーの設定 各部品ごとに個別のリスナー(匿名)クラスを使用し、その中で各処理のメソッドを呼ぶ。
@@ -94,28 +137,33 @@ public class MainWindow extends JFrame {
                 // ファイルの場所と名前を作成
                 String path = txt_saveDir.getText();
                 String file = path + "\\" + txt_fileName.getText() + "_" + (String.valueOf(imageCounter)) + ".png";
-                ImageIO.write(img, "png", new File(file));
+                ImageIO.write(img, format, new File(file));
                 System.out.println(file);
                 System.out.println("saved");
-                txtArea_message
-                        .append("保存完了：" + txt_fileName.getText() + "_" + (String.valueOf(imageCounter)) + ".png\n");
+                // txtArea_message
+                        // .append("保存完了：" + txt_fileName.getText() + "_" + (String.valueOf(imageCounter)) + ".png\n");
+                updateMessage("保存完了：" + txt_fileName.getText() + "_" + (String.valueOf(imageCounter)) + ".png");
             } catch (UnsupportedFlavorException e1) {
                 e1.printStackTrace();
-                txtArea_message.append("保存に失敗\n");
+                // txtArea_message.append("保存に失敗\n");
+                updateMessage("保存に失敗");
                 imageCounter--;
             } catch (IOException e2) {
                 e2.printStackTrace();
-                txtArea_message.append("保存に失敗\n");
+                // txtArea_message.append("保存に失敗\n");
+                updateMessage("保存に失敗");
                 imageCounter--;
             }
         } else {
-            txtArea_message.append("クリップボードに画像なし\n");
+            // txtArea_message.append("クリップボードに画像なし\n");
+            updateMessage("クリップボードに画像なし");
         }
     }
 
     private void menu_resetCount_Listener() {
         imageCounter = 0;
-        txtArea_message.append("連番リセット\n");
+        // txtArea_message.append("連番リセット\n");
+        updateMessage("連番リセット");
     }
 
     private void createMainWindow() {
@@ -254,4 +302,20 @@ public class MainWindow extends JFrame {
         mainFlame.setVisible(true);
 
     }
+
+    private void updateMessage(String m){
+        int lines = 3;//テキストエリアの表示行数
+        String str = txtArea_message.getText();
+        String[] strs = str.split("\n");
+        if(strs.length>=lines){
+            txtArea_message.setText("");//テキストエリアを空白に
+            for(int i=lines-1;i>0;i--){
+                txtArea_message.append(strs[strs.length-i]+"\n");//挿入前の行のうちまだ削除対象でないものを入れる
+            }
+        }
+        txtArea_message.append(m+"\n");//追加したいメッセージ
+    }
+
 }
+
+    
