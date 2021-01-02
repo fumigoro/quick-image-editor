@@ -73,6 +73,7 @@ public class MainWindow extends JFrame {
         createMainWindow();
         imageCounter = 0;
 
+
         /**
          * リスナーの設定 各部品ごとに個別のリスナー(匿名)クラスを使用し、その中で各処理のメソッドを呼ぶ。
          */
@@ -103,7 +104,7 @@ public class MainWindow extends JFrame {
             //ウィンドウがフォーカスされたとき
             public void windowActivated(WindowEvent e) {
                 System.out.println("activate");
-                //TODO 作成された加工タスクに関する情報をeditWindowから取得する
+                // TODO 作成された加工タスクに関する情報をeditWindowから取得する
                 // System.out.println(editWindow.getHoge());
             }
             //ウィンドウが閉じたとき
@@ -177,6 +178,9 @@ public class MainWindow extends JFrame {
     // 新規ボタン押下時の処理
     private void btn_addEditTask_Listener() {
         editWindow = new EditWindow();
+        if(editWindow.isImage()==false){
+            updateMessage("クリップボードに画像なし");
+        };
     }
 
     private void menu_resetCount_Listener() {
