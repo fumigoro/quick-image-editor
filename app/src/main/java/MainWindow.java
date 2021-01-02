@@ -1,52 +1,34 @@
 package quick.image.editor;
 
-
 import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Image;
+import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
-
-import java.io.IOException;
-
-import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
-import java.io.*;
-
-import javax.imageio.*;
-import javax.swing.border.*;
-
-import java.awt.Container;
 import java.awt.*;
-import javax.swing.*;
-import java.awt.event.*;
-
+import java.io.*;
+import java.io.IOException;
 import java.util.Calendar;
 
-import java.awt.Insets;
+import javax.imageio.*;
+import javax.swing.*;
+import javax.swing.border.*;
 
-import com.google.gson.*;
-
-
-import java.io.*;
-
-import com.google.gson.Gson;
-
-import quick.image.editor.Setting;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 
 // import com.google.gson.annotations.*;
 
 // import com.google.gson.stream.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.google.gson.*;
+import com.google.gson.Gson;
 
-
+import quick.image.editor.EditWindow;
 
 @SuppressWarnings("serial") // java.ioをimportしているが、シリアライズは必要ないので警告が出ないようにコレ書いておく
 public class MainWindow extends JFrame {
@@ -62,37 +44,34 @@ public class MainWindow extends JFrame {
     JCheckBox cb_fixAspect;
     JMenuBar menubar;
     JMenu menu_1, menu_2, menu_3;
-    JMenuItem menuitem1_1, menuitem1_2,menuitem1_3, menuitem3_resetCount, menuitem3_setDefaultDir;
-    String format = "png";//画像のファイル形式
+    JMenuItem menuitem1_1, menuitem1_2, menuitem1_3, menuitem3_resetCount, menuitem3_setDefaultDir;
+    String format = "png";// 画像のファイル形式
     Gson gson;
-    // その他変数
+
+    EditWindow editWindow;
+
+    /**
+     * その他変数
+     */
+
     int imageCounter;// 出力した画像の枚数をカウントする
+    // Setting recent = new Setting();
+    JsonNode recent;
+    // public static String path;
+    // public static String fileName;
+    // public static String format;
 
     /**
      * コンストラクタ
      */
     MainWindow() {
+
+        roadSettingFile();
+
         // MainWindow mw = new MainWindow();
         // 各種UI部品をつくる
         createMainWindow();
         imageCounter = 0;
-
-
-        /**
-         * Jacsonを用いてjsonファイルを読み込む
-         *
-         */
-        FileReader fr;
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-			JsonNode node = mapper.readTree(new File("src/main/resources/settings.json"));
-			String number = node.get("defaults").get("format").asText();
-			System.out.println(number);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 
         /**
          * リスナーの設定 各部品ごとに個別のリスナー(匿名)クラスを使用し、その中で各処理のメソッドを呼ぶ。
@@ -111,8 +90,49 @@ public class MainWindow extends JFrame {
             }
         });
 
-    }
+        // 新規ボタン
+        btn_addEditTask.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                btn_addEditTask_Listener();
+            }
+        });
 
+        // メインのウィンドウ
+        // メインのウィンドウがフォーカスされたとき、編集ウィンドウのオブジェクトから加工内容のデータを受け取る
+        mainFlame.addWindowListener(new WindowListener() {
+            //ウィンドウがフォーカスされたとき
+            public void windowActivated(WindowEvent e) {
+                System.out.println("activate");
+                //TODO 作成された加工タスクに関する情報をeditWindowから取得する
+                // System.out.println(editWindow.getHoge());
+            }
+            //ウィンドウが閉じたとき
+            public void windowClosed(WindowEvent e) {
+                System.out.println("closed");
+            }
+            //ウィンドウがバツボタンなどで閉じられようとしたとき
+            public void windowClosing(WindowEvent e) {
+                System.out.println("closing");
+            }
+            // ウィンドウのフォーカスが外れたとき
+            public void windowDeactivated(WindowEvent e) {
+                System.out.println("deactivate");
+            }
+            //ウィンドウが最小化状態からもとに戻ったとき
+            public void windowDeiconified(WindowEvent e) {
+                System.out.println("deiconfied");
+            }
+            //ウィンドウが最小化されたとき
+            public void windowIconified(WindowEvent e) {
+                System.out.println("iconfied");
+            }
+            //ウィンドウが最初に開かれた(初めてvisibleになった)とき
+            public void windowOpened(WindowEvent e) {
+                System.out.println("opend");
+            }
+        });
+
+    }
 
     // Goボタン押下時の処理
     private void btn_go_Listener() {
@@ -129,33 +149,38 @@ public class MainWindow extends JFrame {
                 BufferedImage img = (BufferedImage) clip.getData(DataFlavor.imageFlavor);
                 // ファイルの場所と名前を作成
                 String path = txt_saveDir.getText();
-                String file = path + "\\" + txt_fileName.getText() + "_" + (String.valueOf(imageCounter)) + ".png";
+                String file = path + "\\" + txt_fileName.getText() + "_" + (String.valueOf(imageCounter)) + "."
+                        + recent.get("format").asText();
+                //作成したファイルを書き出し(保存)
                 ImageIO.write(img, format, new File(file));
                 System.out.println(file);
                 System.out.println("saved");
                 // txtArea_message
-                        // .append("保存完了：" + txt_fileName.getText() + "_" + (String.valueOf(imageCounter)) + ".png\n");
-                updateMessage("保存完了：" + txt_fileName.getText() + "_" + (String.valueOf(imageCounter)) + ".png");
+                // .append("保存完了：" + txt_fileName.getText() + "_" +
+                // (String.valueOf(imageCounter)) + ".png\n");
+                updateMessage("保存完了：" + txt_fileName.getText() + "_" + (String.valueOf(imageCounter)) + "."
+                        + recent.get("format").asText());
             } catch (UnsupportedFlavorException e1) {
                 e1.printStackTrace();
-                // txtArea_message.append("保存に失敗\n");
                 updateMessage("保存に失敗");
                 imageCounter--;
             } catch (IOException e2) {
                 e2.printStackTrace();
-                // txtArea_message.append("保存に失敗\n");
                 updateMessage("保存に失敗");
                 imageCounter--;
             }
         } else {
-            // txtArea_message.append("クリップボードに画像なし\n");
             updateMessage("クリップボードに画像なし");
         }
     }
 
+    // 新規ボタン押下時の処理
+    private void btn_addEditTask_Listener() {
+        editWindow = new EditWindow();
+    }
+
     private void menu_resetCount_Listener() {
         imageCounter = 0;
-        // txtArea_message.append("連番リセット\n");
         updateMessage("連番リセット");
     }
 
@@ -168,7 +193,6 @@ public class MainWindow extends JFrame {
         panel_L = new JPanel();
         panel_L.setLayout(new BorderLayout());
 
-        // panel_L.setBorder(titledBorder);
         panel_L.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         panel_L1 = new JPanel();
 
@@ -206,9 +230,15 @@ public class MainWindow extends JFrame {
 
         Calendar cal = Calendar.getInstance();
 
-        txt_fileName = new JTextField(
-                String.valueOf(cal.get(Calendar.YEAR)) + cal.get(Calendar.MONTH) + cal.get(Calendar.DATE), 15);
-        JLabel label_fileName = new JLabel("_<番号>.png");
+        String fn;
+        if (recent.get("fileName").asText() == "") {// 設定ファイルの項目が空白の場合
+            fn = String.valueOf(cal.get(Calendar.YEAR)) + String.valueOf(cal.get(Calendar.MONTH) + 1)
+                    + cal.get(Calendar.DATE);
+        } else {
+            fn = recent.get("fileName").asText();
+        }
+        txt_fileName = new JTextField(fn, 15);
+        JLabel label_fileName = new JLabel("_<番号>." + recent.get("format").asText());
         panel_R2.add(txt_fileName);
         panel_R2.add(label_fileName);
         panel_Rup.add(panel_R2);
@@ -220,7 +250,7 @@ public class MainWindow extends JFrame {
         panel_R3.setPreferredSize(new Dimension(300, 40));
         panel_R3.setLayout(new FlowLayout());
 
-        txt_saveDir = new JTextField("C:\\Users\\sakas\\Desktop", 20);
+        txt_saveDir = new JTextField(recent.get("path").asText(), 20);
         panel_R3.add(txt_saveDir);
         panel_Rup.add(panel_R3);
         panel_R.add(panel_Rup);
@@ -231,19 +261,22 @@ public class MainWindow extends JFrame {
         panel_R4.setBorder(titledBorder_R4);
         panel_R4.setPreferredSize(new Dimension(300, 40));
 
-        txt_imageSizeW = new JTextField(7);
+        txt_imageSizeW = new JTextField(recent.get("size").get("width").asText(), 7);
         JLabel label_imageSize1 = new JLabel("px × ");
-        txt_imageSizeH = new JTextField(7);
+        txt_imageSizeH = new JTextField(recent.get("size").get("hight").asText(), 7);
         JLabel label_imageSize2 = new JLabel("px");
         panel_R4.add(txt_imageSizeW);
         panel_R4.add(label_imageSize1);
         panel_R4.add(txt_imageSizeH);
         panel_R4.add(label_imageSize2);
 
-        btn_presetSize1 = new JButton("1920×1080");
-        btn_presetSize2 = new JButton(" 960× 540");
-        cb_fixAspect = new JCheckBox("縦横比を維持");
-        JCheckBox cb_notChanageSize = new JCheckBox("サイズ変更しない", true);
+        btn_presetSize1 = new JButton(recent.get("size").get("presets").get(0).get("width").asText() + "×"
+                + recent.get("size").get("presets").get(0).get("hight").asText());
+        btn_presetSize2 = new JButton(recent.get("size").get("presets").get(1).get("width").asText() + "×"
+                + recent.get("size").get("presets").get(1).get("hight").asText());
+        cb_fixAspect = new JCheckBox("縦横比を維持", Boolean.valueOf(recent.get("size").get("fixAspectRatio").asText()));
+        JCheckBox cb_notChanageSize = new JCheckBox("サイズ変更しない",
+                Boolean.valueOf(recent.get("size").get("resize").asText()));
         // ボタン内部の余白を0にする
         btn_presetSize1.setMargin(new Insets(0, 0, 0, 0));
         btn_presetSize2.setMargin(new Insets(0, 0, 0, 0));
@@ -296,19 +329,33 @@ public class MainWindow extends JFrame {
 
     }
 
-    private void updateMessage(String m){
-        int lines = 3;//テキストエリアの表示行数
+    private void updateMessage(String m) {
+        int lines = 3;// テキストエリアの表示行数
         String str = txtArea_message.getText();
         String[] strs = str.split("\n");
-        if(strs.length>=lines){
-            txtArea_message.setText("");//テキストエリアを空白に
-            for(int i=lines-1;i>0;i--){
-                txtArea_message.append(strs[strs.length-i]+"\n");//挿入前の行のうちまだ削除対象でないものを入れる
+        if (strs.length >= lines) {
+            txtArea_message.setText("");// テキストエリアを空白に
+            for (int i = lines - 1; i > 0; i--) {
+                txtArea_message.append(strs[strs.length - i] + "\n");// 挿入前の行のうちまだ削除対象でないものを入れる
             }
         }
-        txtArea_message.append(m+"\n");//追加したいメッセージ
+        txtArea_message.append(m + "\n");// 追加したいメッセージ
+    }
+
+    private void roadSettingFile() {
+        /**
+         * 外部ライブラリJacsonを用いてjsonファイルを読み込む
+         *
+         */
+        FileReader fr;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            this.recent = mapper.readTree(new File("src/main/resources/recent.json"));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }
-
-    

@@ -42,7 +42,7 @@ sourceSets {
 }
 
 dependencies {
-  implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.google.code.gson:gson:2.8.6'
 //  implementation files("lib/gson-2.8.6.jar")
-
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.3.4'
 }
