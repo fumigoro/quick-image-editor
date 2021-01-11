@@ -1,4 +1,4 @@
-package quick.image.editor;
+// package quick.image.editor;
 
 public class Setting{
     public static String path;

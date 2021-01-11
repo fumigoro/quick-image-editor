@@ -23,6 +23,8 @@ public class EditWindow extends JFrame {
 
 
     JFrame editFrame;
+    JPanel panel_image ,panel_side;
+
 
     EditWindow() {
         createEditWindow();
@@ -37,12 +39,21 @@ public class EditWindow extends JFrame {
         editFrame = new JFrame("Edit");
         //位置とサイズを指定
         editFrame.setBounds(10, 10, CANVAS_W + MENU_W, CANVAS_H+50);
+        panel_image = new JPanel();
+        panel_image.setLayout(new BorderLayout());
         
+        panel_side = new JPanel();
+        panel_side.setPreferredSize(new Dimension(300, CANVAS_H+50));
+
+        //クリップボードから画像取得してフレーム内に表示
         image = getClipboardImage();
         if(image!=null){
-        //クリップボードから画像取得してフレーム内に表示
         JLabel picLabel = new JLabel(new ImageIcon(image));
-        editFrame.add(picLabel);
+        picLabel.setLayout(new BorderLayout());
+        panel_image.add(picLabel,BorderLayout.CENTER);
+
+        editFrame.add(panel_image,BorderLayout.WEST);
+        editFrame.add(panel_side,BorderLayout.EAST);
         //可視化
         editFrame.setVisible(true);
         }
@@ -85,8 +96,8 @@ public class EditWindow extends JFrame {
             return bimg;
         } catch (Exception e) {
             //エラーハンドリング(主にclip.getData()に対するクリップボードの中身が画像でない場合の例外処理)
-            // System.out.println("クリップボードの中身が画像ではありません");
-            e.printStackTrace();
+            System.out.println("クリップボードの中身が画像ではありません");
+            // e.printStackTrace();
             isImage=false;
             return null;
         }
