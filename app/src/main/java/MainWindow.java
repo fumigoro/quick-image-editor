@@ -16,7 +16,10 @@ import java.io.*;
 import java.io.IOException;
 
 import java.text.SimpleDateFormat;
+
 import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.*;
 
@@ -31,6 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import quick.image.editor.EditWindow;
 import quick.image.editor.Settings;
+import quick.image.editor.Task;
 
 @SuppressWarnings("serial") // java.ioをimportしているが、シリアライズは必要ないので警告が出ないようにコレ書いておく
 public class MainWindow extends JFrame {
@@ -56,6 +60,7 @@ public class MainWindow extends JFrame {
     // JButton[] btn_tasks = new JButton[10];
     int countTasks = 0;
     Task[] tasks = new Task[10];
+    List<Task> taskList = new ArrayList<>();
     /**
      * その他変数
      */
@@ -126,7 +131,6 @@ public class MainWindow extends JFrame {
             public void windowActivated(WindowEvent e) {
                 System.out.println("activate");
                 // TODO 作成された加工タスクに関する情報をeditWindowから取得する
-                addTask(10,10,20,20,1);
                 // System.out.println(editWindow.getHoge());
             }
 
@@ -232,11 +236,14 @@ public class MainWindow extends JFrame {
 
     // 新規ボタン押下時の処理
     private void btn_addEditTask_Listener() {
+
         editWindow = new EditWindow();
         if (editWindow.isImage() == false) {
             updateMessage("クリップボードに画像なし");
+        }else{
+        addTask(10,10,20,20,1);
         }
-        ;
+        
     }
 
     // 連番リセットボタン押下時の処理
@@ -516,12 +523,17 @@ public class MainWindow extends JFrame {
      * 追加された加工タスクをGUIに表示する
      */
     private void addTask(int rangeSW,int rangeSH,int rangeEW,int rangeEH,int type){
-        countTasks=0;
-        tasks[countTasks] = new Task(rangeSW,rangeSH,rangeEW,rangeEH,type);
+        System.out.println("add");
+        taskList.add(new Task(rangeSW,rangeSH,rangeEW,rangeEH,type));
+        // countTasks=0;
+        // tasks[countTasks]=null;
+        // tasks[countTasks] = new Task(rangeSW,rangeSH,rangeEW,rangeEH,type);
         String labelText = "";
         switch(type){
             case 1://トリミング
-                labelText = "トリミング "+tasks[countTasks].getRangeString();
+                // labelText = "トリミング "+tasks[countTasks].getRangeString();
+                labelText = "トリミング "+taskList.get(countTasks).getRangeString();
+
                 break;
             case 2://ぼかし
 
@@ -532,7 +544,14 @@ public class MainWindow extends JFrame {
             default:
 
         }
-        tasks[countTasks].label.setText(labelText);
-        panel_L2.add(tasks[countTasks].getGUI());
+        // tasks[countTasks].label.setText(labelText);
+        // panel_L2.add(tasks[countTasks].getGUI());
+        panel_L2.add(taskList.get(countTasks).panel);
+
+        taskList.get(countTasks).label.setText(labelText);
+        taskList.get(countTasks).panel.setVisible(true);
+        System.out.print(taskList.get(countTasks).active);
+        System.out.println(countTasks);
+        countTasks+=1;
     }
 }

@@ -21,9 +21,17 @@ public class EditWindow extends JFrame {
     //現在クリップボードに画像があるかのフラグ
     boolean isImage;
 
+    //加工内容を表すデータ
+    int rangeSW;
+    int rangeSH;
+    int rangeEW;
+    int rangeEH;
+    int type;
+
 
     JFrame editFrame;
     JPanel panel_image ,panel_side;
+    JButton btn_add;
 
 
     EditWindow() {
@@ -41,10 +49,15 @@ public class EditWindow extends JFrame {
         editFrame.setBounds(10, 10, CANVAS_W + MENU_W, CANVAS_H+50);
         panel_image = new JPanel();
         panel_image.setLayout(new BorderLayout());
+        panel_image.setPreferredSize(new Dimension(CANVAS_W, CANVAS_H+50));
+        
+        panel_image.setBackground(Color.WHITE);
         
         panel_side = new JPanel();
-        panel_side.setPreferredSize(new Dimension(300, CANVAS_H+50));
-
+        panel_side.setPreferredSize(new Dimension(MENU_W, CANVAS_H+50));
+        btn_add = new JButton("追加");
+        
+        panel_side.add(btn_add);
         //クリップボードから画像取得してフレーム内に表示
         image = getClipboardImage();
         if(image!=null){
@@ -96,7 +109,7 @@ public class EditWindow extends JFrame {
             return bimg;
         } catch (Exception e) {
             //エラーハンドリング(主にclip.getData()に対するクリップボードの中身が画像でない場合の例外処理)
-            System.out.println("クリップボードの中身が画像ではありません");
+            // System.out.println("クリップボードの中身が画像ではありません");
             // e.printStackTrace();
             isImage=false;
             return null;

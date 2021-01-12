@@ -14,6 +14,8 @@ public class Task{
     public JLabel label;
     public JButton deleteBtn;
     public JPanel panel;
+    public boolean active = false;
+    
     // public int id;
     Task(int rangeSW,int rangeSH,int rangeEW,int rangeEH,int type){
         rangeS = new Dimension(rangeSW,rangeSH);
@@ -36,16 +38,16 @@ public class Task{
         panel.setPreferredSize(new Dimension(230,30));
         panel.add(label,BorderLayout.WEST);
         panel.add(deleteBtn,BorderLayout.EAST);
-    
+        panel.setVisible(true);
+
         deleteBtn.addActionListener(new ActionListener(){
-
-        public void actionPerformed(ActionEvent e){
-            panel.setVisible(false);
-            System.out.println("delete");
-        }
-    });
-    System.out.println("完了");
-
+            public void actionPerformed(ActionEvent e){
+                panel.setVisible(false);
+                System.out.println("delete");
+            }
+        });
+    // System.out.println("完了");
+        active = true;
     }
 
     public String getRangeString(){
