@@ -14,64 +14,63 @@ public class EditWindow extends JFrame {
     // 画像エリアのサイズ
     final int CANVAS_W = 1060;
     final int CANVAS_H = 600;
-    //左のUIエリアの幅
+    // 左のUIエリアの幅
     final int MENU_W = 300;
-    //画像
+    // 画像
     BufferedImage image;
-    //現在クリップボードに画像があるかのフラグ
+    // 現在クリップボードに画像があるかのフラグ
     boolean isImage;
 
-    //加工内容を表すデータ
+    // 加工内容を表すデータ
     int rangeSW;
     int rangeSH;
     int rangeEW;
     int rangeEH;
     int type;
 
-
     JFrame editFrame;
-    JPanel panel_image ,panel_side;
+    JPanel panel_image, panel_side;
     JButton btn_add;
-
+    JLabel picLabel;
 
     EditWindow() {
         createEditWindow();
-        
+        drawLine();
     }
 
     /**
      * ウィンドウを作成し、各種UIを作成する
      */
     private void createEditWindow() {
-        //ウィンドウ作成
+        // ウィンドウ作成
         editFrame = new JFrame("Edit");
-        //位置とサイズを指定
-        editFrame.setBounds(10, 10, CANVAS_W + MENU_W, CANVAS_H+50);
+        // 位置とサイズを指定
+        editFrame.setBounds(50, 50, CANVAS_W + MENU_W, CANVAS_H + 50);
         panel_image = new JPanel();
         panel_image.setLayout(new BorderLayout());
-        panel_image.setPreferredSize(new Dimension(CANVAS_W, CANVAS_H+50));
-        
+        panel_image.setPreferredSize(new Dimension(CANVAS_W, CANVAS_H + 50));
+
         panel_image.setBackground(Color.WHITE);
-        
+
         panel_side = new JPanel();
-        panel_side.setPreferredSize(new Dimension(MENU_W, CANVAS_H+50));
-        btn_add = new JButton("追加");
-        
+        panel_side.setPreferredSize(new Dimension(MENU_W, CANVAS_H + 50));
+        btn_add = new JButton("トリミング位置を指定");
+        btn_add.setPreferredSize(new Dimension(MENU_W-50, 50));
         panel_side.add(btn_add);
-        //クリップボードから画像取得してフレーム内に表示
+        // クリップボードから画像取得してフレーム内に表示
         image = getClipboardImage();
-        if(image!=null){
-        JLabel picLabel = new JLabel(new ImageIcon(image));
-        picLabel.setLayout(new BorderLayout());
-        panel_image.add(picLabel,BorderLayout.CENTER);
+        if (image != null) {
+            picLabel = new JLabel(new ImageIcon(image));
+            picLabel.setLayout(new BorderLayout());
+            panel_image.add(picLabel, BorderLayout.CENTER);
 
-        editFrame.add(panel_image,BorderLayout.WEST);
-        editFrame.add(panel_side,BorderLayout.EAST);
-        //可視化
-        editFrame.setVisible(true);
+            editFrame.add(panel_image, BorderLayout.WEST);
+            editFrame.add(panel_side, BorderLayout.EAST);
+            // 可視化
+            editFrame.setVisible(true);
         }
-    }
 
+    }
 
     /**
      * クリップボードから画像を取得する
@@ -79,14 +78,14 @@ public class EditWindow extends JFrame {
      * @return BufferedImage 画像がない場合はnull
      */
     private BufferedImage getClipboardImage() {
-        //クリップボードの中身を取得
+        // クリップボードの中身を取得
         Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
         Transferable data = clip.getContents(null);
         // 取得したものが画像データである場合
         try {
             // buferedImageにキャストして代入
             BufferedImage img = (BufferedImage) clip.getData(DataFlavor.imageFlavor);
-            //縮小後の縦横サイズを保持する変数
+            // 縮小後の縦横サイズを保持する変数
             int width = img.getWidth();
             int height = img.getHeight();
             // 用意している画像表示枠(imageW*imageH)を上回る場合に縮小する
@@ -99,8 +98,8 @@ public class EditWindow extends JFrame {
                 height = (int) (width * img.getHeight() / img.getWidth());
             }
 
-            //画像がウィンドウに収まるように縮小
-            //縮小を行っているgetScaledInstanceImageメソッドは戻り値がImageなので、Graphicsを使ってBufferedImageへの変換も行う
+            // 画像がウィンドウに収まるように縮小
+            // 縮小を行っているgetScaledInstanceImageメソッドは戻り値がImageなので、Graphicsを使ってBufferedImageへの変換も行う
             BufferedImage bimg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = bimg.createGraphics();
             g.drawImage(img.getScaledInstance(width, height, Image.SCALE_AREA_AVERAGING), 0, 0, null);
@@ -108,18 +107,23 @@ public class EditWindow extends JFrame {
             isImage = true;
             return bimg;
         } catch (Exception e) {
-            //エラーハンドリング(主にclip.getData()に対するクリップボードの中身が画像でない場合の例外処理)
+            // エラーハンドリング(主にclip.getData()に対するクリップボードの中身が画像でない場合の例外処理)
             // System.out.println("クリップボードの中身が画像ではありません");
             // e.printStackTrace();
-            isImage=false;
+            isImage = false;
             return null;
         }
     }
 
-    //クリップボードに画像があるか確かめるメソッド
-    public boolean isImage(){
+    // クリップボードに画像があるか確かめるメソッド
+    public boolean isImage() {
         return isImage;
     }
+
+    public void drawLine(){
+		Graphics g = picLabel.getGraphics();
+        g.fillRect(10, 10, 100, 100);
+	}
 
     // /**
     // * インターフェイスWindowListenerによって実装が矯正されるメソッド

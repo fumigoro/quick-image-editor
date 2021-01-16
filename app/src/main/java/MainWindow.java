@@ -257,7 +257,7 @@ public class MainWindow extends JFrame {
         mainFlame = new JFrame("Quick image editor");
         mainFlame.setLayout(new GridLayout(1, 2));
         // ウィンドウの位置とサイズを指定
-        mainFlame.setBounds(100, 100, 600, 450);
+        mainFlame.setBounds(10, 10, 600, 450);
 
         panel_L = new JPanel();
         panel_L.setLayout(new BorderLayout());
