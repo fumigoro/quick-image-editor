@@ -2,9 +2,14 @@ package quick.image.editor;
 
 import java.awt.*;
 import javax.swing.*;
+
+import quick.image.editor.Task;
+
 import java.awt.event.*;
 import java.awt.image.*;
 import java.awt.Toolkit;
+import java.awt.Canvas;
+import java.awt.Color;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -20,22 +25,29 @@ public class EditWindow extends JFrame {
     BufferedImage image;
     // 現在クリップボードに画像があるかのフラグ
     boolean isImage;
+    // 読み込んだ画像のサイズ
+    int scaledWidth;
+    int scaledHeight;
+    //縮小した倍率
+    double scale;
 
-    // 加工内容を表すデータ
-    int rangeSW;
-    int rangeSH;
-    int rangeEW;
-    int rangeEH;
-    int type;
+    //自分自身がインスタンス化されているかかのフラグ
+    //getTaskをstaticにしているため
+    boolean isInstantiated;
 
+    //UI部品
+    EditCanvas canvas;
     JFrame editFrame;
     JPanel panel_image, panel_side;
-    JButton btn_add;
+    JButton btn_addTrim;
     JLabel picLabel;
 
     EditWindow() {
         createEditWindow();
-        drawLine();
+        isInstantiated = true;
+    }
+    EditWindow(boolean dummy) {
+        isInstantiated = false;
     }
 
     /**
@@ -45,7 +57,7 @@ public class EditWindow extends JFrame {
         // ウィンドウ作成
         editFrame = new JFrame("Edit");
         // 位置とサイズを指定
-        editFrame.setBounds(50, 50, CANVAS_W + MENU_W, CANVAS_H + 50);
+        editFrame.setBounds(50, 50, CANVAS_W + MENU_W, CANVAS_H + 100);
         panel_image = new JPanel();
         panel_image.setLayout(new BorderLayout());
         panel_image.setPreferredSize(new Dimension(CANVAS_W, CANVAS_H + 50));
@@ -54,15 +66,43 @@ public class EditWindow extends JFrame {
 
         panel_side = new JPanel();
         panel_side.setPreferredSize(new Dimension(MENU_W, CANVAS_H + 50));
-        btn_add = new JButton("トリミング位置を指定");
-        btn_add.setPreferredSize(new Dimension(MENU_W-50, 50));
-        panel_side.add(btn_add);
+        btn_addTrim = new JButton("トリミング位置を指定");
+        btn_addTrim.setBackground(new Color(255,255,255));
+        btn_addTrim.setPreferredSize(new Dimension(MENU_W - 50, 50));
+        panel_side.add(btn_addTrim);
+
         // クリップボードから画像取得してフレーム内に表示
         image = getClipboardImage();
+
+
+
         if (image != null) {
-            picLabel = new JLabel(new ImageIcon(image));
-            picLabel.setLayout(new BorderLayout());
-            panel_image.add(picLabel, BorderLayout.CENTER);
+        System.out.printf("編集画面立ち上げ時画像(縮小あと):%d,%d\n",image.getWidth(),image.getHeight());
+        // System.out.printf("編集画面立ち上げ時画像(縮小あと):%d,%d\n",scaledWidth,scaledHeight);
+            // EditCanvasのインスタンスを生成
+            canvas = new EditCanvas(scaledWidth, scaledHeight, scale,image);
+            // JPanel pane = new JPanel();
+            editFrame.getContentPane().add(panel_image);
+            panel_image.add(canvas, BorderLayout.CENTER);
+
+            // トリミングボタンのリスナー設定
+            btn_addTrim.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    canvas.task.setType(1);//加工種類をトリミングに設定
+                    System.out.println("set");
+                    if (canvas.mode != 1) {
+                        canvas.mode = -1;
+                        btn_addTrim.setBackground(new Color(82, 165, 255));
+                        canvas.repaint();
+                    } else {
+                        canvas.mode = 0;
+                        btn_addTrim.setBackground(new Color(255,255,255));
+                    }
+                }
+            });
+            // picLabel = new JLabel(new ImageIcon(image));
+            // picLabel.setLayout(new BorderLayout());
+            // panel_image.add(picLabel, BorderLayout.CENTER);
 
             editFrame.add(panel_image, BorderLayout.WEST);
             editFrame.add(panel_side, BorderLayout.EAST);
@@ -85,24 +125,32 @@ public class EditWindow extends JFrame {
         try {
             // buferedImageにキャストして代入
             BufferedImage img = (BufferedImage) clip.getData(DataFlavor.imageFlavor);
+            System.out.printf("編集画面立ち上げ時画像(縮小前):%d,%d\n",img.getWidth(),img.getHeight());
+
             // 縮小後の縦横サイズを保持する変数
-            int width = img.getWidth();
-            int height = img.getHeight();
+            scaledWidth = img.getWidth();
+            scaledHeight = img.getHeight();
+            scale = 1.0;
             // 用意している画像表示枠(imageW*imageH)を上回る場合に縮小する
             if (img.getHeight() > CANVAS_H) {
-                height = CANVAS_H;
-                width = (int) (height * img.getWidth() / img.getHeight());
+                scaledHeight = CANVAS_H;
+                scaledWidth = (int) (scaledHeight * img.getWidth() / img.getHeight());
+                scale = ((double)scaledHeight/(double)img.getHeight());
             }
             if (img.getWidth() > CANVAS_W) {
-                width = CANVAS_W;
-                height = (int) (width * img.getHeight() / img.getWidth());
-            }
+                scaledWidth = CANVAS_W;
+                scaledHeight = (int) (scaledWidth * img.getHeight() / img.getWidth());
+                scale = ((double)scaledWidth/(double)img.getWidth());
+            }   
+            System.out.println((double)scaledWidth/(double)img.getWidth());
+            System.out.println(1.0/20.0);
+
 
             // 画像がウィンドウに収まるように縮小
             // 縮小を行っているgetScaledInstanceImageメソッドは戻り値がImageなので、Graphicsを使ってBufferedImageへの変換も行う
-            BufferedImage bimg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage bimg = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = bimg.createGraphics();
-            g.drawImage(img.getScaledInstance(width, height, Image.SCALE_AREA_AVERAGING), 0, 0, null);
+            g.drawImage(img.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_AREA_AVERAGING), 0, 0, null);
             g.dispose();
             isImage = true;
             return bimg;
@@ -120,41 +168,179 @@ public class EditWindow extends JFrame {
         return isImage;
     }
 
-    public void drawLine(){
-		Graphics g = picLabel.getGraphics();
-        g.fillRect(10, 10, 100, 100);
-	}
+    /**
+     * 設定されたTaskオブジェクトを返す
+     */
+    public Task getTask(){
+        if(isInstantiated&&this.isImage()){
+            return canvas.task;
+        }else{
+            return null;
+        }
+        
+    }
 
-    // /**
-    // * インターフェイスWindowListenerによって実装が矯正されるメソッド
-    // * ウィンドウが閉じられたときに処理
-    // */
-    // public void windowOpened(WindowEvent e){
-    // /* 使わない */
-    // }
+}
 
-    // public void windowClosing(WindowEvent e){
-    // /* 使わない */
-    // }
+// キャンバスクラス
+class EditCanvas extends Canvas implements MouseListener, MouseMotionListener {
 
-    // public void windowClosed(WindowEvent e){
-    // /* 処理したい内容をここに記述する */
-    // editFrame.setVisible(false);
-    // }
+    // 描画内容を保持するBufferedImage
+    BufferedImage cImage = null;
+    // 加工する画像
+    BufferedImage image = null;
+    // cImageに描画するためのインスタンス
+    // private Graphics2D g2d;
+    Graphics g2d;
+    // 線の開始座標・終了座標
+    // private int x, y, xx, yy;
+    // 線の色
+    Color c = Color.black;
+    // 描画モードＯＲ消しゴムモード
+    public int mode;
+    // 画像のサイズ
+    int width, height;
+    // マウスポインターの現在位置座標
+    int x, y;
+    // ドラッグ開始座標
+    int px, py;
+    //マウスをドラッグして描く四角の縦横
+    int ow,oh;
+    //マウスをドラッグして描く四角の支点
+    int sx,sy;
+    // 加工内容を表すデータ
+    public Task task = new Task();
+    //表示している画像の縮小倍率
+    double scale;
 
-    // public void windowIconified(WindowEvent e){
-    // /* 使わない */
-    // }
+    EditCanvas(int w, int h, double scale,BufferedImage image) {
+        this.image = image;
+        width = w;
+        height = h;
+        this.scale = scale;
+        // 座標を初期化
+        x = -1;
+        y = -1;
+        px = -1;
+        py = -1;
+        mode = 0;
+        ow = 0;
+        oh = 0;
+        // リスナー設定
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        // キャンバスの背景を白に設定
 
-    // public void windowDeiconified(WindowEvent e){
-    // /* 使わない */
-    // }
+        setBackground(new Color(238, 238, 238));
 
-    // public void windowActivated(WindowEvent e){
-    // /* 使わない */
-    // }
+        // 描画内容を保持するBufferedImageを生成
+        cImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        g2d = cImage.getGraphics();
+        // BufferedImageの背景も白にする
+        // g2d.setColor(Color.GREEN);
+        // g2d.fillRect(0, 0, 200, 200);
+        g2d.drawImage(image, 0, 0, null);
+        // 描画
+        repaint();
+    }
 
-    // public void windowDeactivated(WindowEvent e){
-    // /* 使わない */
-    // }
+    public void paint(Graphics g) {
+        // System.out.println("paint");
+        // System.out.println(mode);
+
+        g2d.drawImage(image, 0, 0, null);
+        switch (mode) {
+            case 1:
+                
+                if (x < px) {
+                    sx = x;
+                } else {
+                    sx = px;
+                }
+                if (y < py) {
+                    sy = y;
+                } else {
+                    sy = py;
+                }
+                // System.out.println(ow);  
+                g2d.setColor(new Color(21, 97, 178,80));
+                g2d.fillRect(0, 0, width, sy);
+                g2d.fillRect(0, sy, sx, oh);
+                g2d.fillRect(sx+ow, sy, width-ow-sx, oh);
+                g2d.fillRect(0, sy+oh, width, height-sy-oh);
+
+                g2d.setColor(Color.ORANGE);
+                g2d.drawRect(sx,sy,ow-1,oh-1);
+                break;
+            case -1:
+                g2d.setColor(new Color(21, 97, 178,80));
+                g2d.fillRect(0,0,width,height);
+                mode = 1;
+        }
+        g.drawImage(cImage, 0, 0, null);
+    }
+
+    // フレームに何らかの更新が行われた時の処理
+    @Override
+    public void update(Graphics g) {
+        paint(g); // 下記の paint を呼び出す
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        x = clamp(e.getX(), width);
+        y = clamp(e.getY(), height);
+        // System.out.println(px);
+        ow = Math.abs(x - px);
+        oh = Math.abs(y - py);
+        repaint();
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        x = clamp(e.getX(), width);
+        y = clamp(e.getY(), height);
+        px = clamp(e.getX(), width);
+        py = clamp(e.getY(), height);
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        // mode = 0;
+        // 加工内容を表すデータ
+        task.setRange(undoScale(sx),undoScale(sy),undoScale(ow),undoScale(oh));
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+    }
+
+    private int clamp(int n, int max){
+        if(n<0){
+            return 0;
+        }
+        if(n>max){
+            return max;
+        }
+        return n;
+    }
+
+    private int undoScale(int n){
+        double n2 = n;
+        int res = (int)(n2/scale);
+        return res;
+    }
 }

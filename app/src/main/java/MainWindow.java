@@ -76,6 +76,8 @@ public class MainWindow extends JFrame {
      * コンストラクタ
      */
     MainWindow() {
+        // リスナー内で使用するため一旦editWindowをインスタンス化
+        editWindow = new EditWindow(false);
         // 設定ファイルを読み込み
         final boolean isLoadedSuccessfully = loadSettingFile();
         if (!isLoadedSuccessfully) {
@@ -129,39 +131,43 @@ public class MainWindow extends JFrame {
         mainFlame.addWindowListener(new WindowListener() {
             // ウィンドウがフォーカスされたとき
             public void windowActivated(WindowEvent e) {
-                System.out.println("activate");
+                // System.out.println("activate");
                 // TODO 作成された加工タスクに関する情報をeditWindowから取得する
+                if(editWindow.getTask()!=null){
+                    addTask(editWindow.getTask());
+                    // System.out.println("addtask");
+                }
                 // System.out.println(editWindow.getHoge());
             }
 
             // ウィンドウが閉じたとき
             public void windowClosed(WindowEvent e) {
-                System.out.println("closed");
+                // System.out.println("closed");
             }
 
             // ウィンドウがバツボタンなどで閉じられようとしたとき
             public void windowClosing(WindowEvent e) {
-                System.out.println("closing");
+                // System.out.println("closing");
             }
 
             // ウィンドウのフォーカスが外れたとき
             public void windowDeactivated(WindowEvent e) {
-                System.out.println("deactivate");
+                // System.out.println("deactivate");
             }
 
             // ウィンドウが最小化状態からもとに戻ったとき
             public void windowDeiconified(WindowEvent e) {
-                System.out.println("deiconfied");
+                // System.out.println("deiconfied");
             }
 
             // ウィンドウが最小化されたとき
             public void windowIconified(WindowEvent e) {
-                System.out.println("iconfied");
+                // System.out.println("iconfied");
             }
 
             // ウィンドウが最初に開かれた(初めてvisibleになった)とき
             public void windowOpened(WindowEvent e) {
-                System.out.println("opend");
+                // System.out.println("opend");
             }
         });
 
@@ -198,10 +204,25 @@ public class MainWindow extends JFrame {
                 // クリップボード上のデータを取得しBufferedImageへキャスト
                 BufferedImage img = (BufferedImage) clip.getData(DataFlavor.imageFlavor);// 例外：UnsupportedFlavorException
                 // TODO: 各種加工処理
-                //トリミング
-
-
+                
                 //ぼかし
+                
+                
+                
+                //トリミング
+                for(int i=0;i<taskList.size();i++){
+                    Task tmpTask = taskList.get(i);
+                    //タスクの有効性を確認
+                    if(tmpTask.active){
+                        //設定された加工内容がトリミングかを確認
+                        if(tmpTask.type==1){
+                            System.out.printf("読み込み時画像:%d,%d\n",img.getWidth(),img.getHeight());
+                            img = tmpTask.run(img);
+
+                        }
+                    }
+                }
+
 
 
                 //リサイズ
@@ -241,7 +262,7 @@ public class MainWindow extends JFrame {
         if (editWindow.isImage() == false) {
             updateMessage("クリップボードに画像なし");
         }else{
-        addTask(10,10,20,20,1);
+        // addTask(10,10,20,20,1);
         }
         
     }
@@ -266,6 +287,8 @@ public class MainWindow extends JFrame {
         panel_L1 = new JPanel();
 
         btn_go = new JButton("Go");
+        btn_go.setBackground(new Color(82, 165, 255));
+        btn_go.setFont(new Font("Arial", Font.BOLD, 16));
 
         btn_addEditTask = new JButton("新規");
         panel_L1.setLayout(new GridLayout(1, 2));
@@ -434,7 +457,7 @@ public class MainWindow extends JFrame {
             this.setting = mapper.readValue(new File(SETTING_FILE_PATH), Settings.class);
             // this.setting.setDay();
             this.setting.init();
-            System.out.println("設定読み込み完了");
+            // System.out.println("設定読み込み完了");
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -522,17 +545,22 @@ public class MainWindow extends JFrame {
     /**
      * 追加された加工タスクをGUIに表示する
      */
-    private void addTask(int rangeSW,int rangeSH,int rangeEW,int rangeEH,int type){
-        System.out.println("add");
-        taskList.add(new Task(rangeSW,rangeSH,rangeEW,rangeEH,type));
+    private void addTask(Task task){
+        // System.out.println("add");
+        //加工内容が設定されていない場合
+        if(task.isReady()!=true){
+            System.out.println("加工内容未設定");
+            return;
+        }
+        taskList.add(task);
         // countTasks=0;
         // tasks[countTasks]=null;
         // tasks[countTasks] = new Task(rangeSW,rangeSH,rangeEW,rangeEH,type);
         String labelText = "";
-        switch(type){
+        switch(task.type){
             case 1://トリミング
-                // labelText = "トリミング "+tasks[countTasks].getRangeString();
-                labelText = "トリミング "+taskList.get(countTasks).getRangeString();
+                // labelText = "トリミング "+tasks[countTasks].getRangeS();
+                labelText = "トリミング "+taskList.get(countTasks).getRangeS();
 
                 break;
             case 2://ぼかし
@@ -550,8 +578,8 @@ public class MainWindow extends JFrame {
 
         taskList.get(countTasks).label.setText(labelText);
         taskList.get(countTasks).panel.setVisible(true);
-        System.out.print(taskList.get(countTasks).active);
-        System.out.println(countTasks);
+        // System.out.print(taskList.get(countTasks).active);
+        // System.out.println(countTasks);
         countTasks+=1;
     }
 }
