@@ -1,0 +1,29 @@
+{
+    //加工後の保存先のパス
+    "path": "C:\\Users\\sakas\\Desktop",
+    //保存ファイル名(空白にすると今日の日付が入る)
+    //拡張子は不要
+    "fileName": "",
+    //保存する画像のフォーマット
+    //jpeg,pngから選択
+    "format": "png",
+    //画像のサイズを変更するかどうか
+    "resize": false,
+    //画像のサイズを変更するかどうか
+    "fixAspectRatio": true,
+    //出力画像のサイズ
+    "defaultSize":{
+        "height": 1080,
+        "width": 1920
+    },
+    //出力画像のサイズプリセット
+    "presetSize1":{
+        "height": 1080,
+        "width": 1920
+    },
+    "presetSize2":{
+        "height": 720,
+        "width": 1080
+    }
+
+}

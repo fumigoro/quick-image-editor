@@ -17,8 +17,8 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 
 public class EditWindow extends JFrame {
     // 画像エリアのサイズ
-    final int CANVAS_W = 1060;
-    final int CANVAS_H = 600;
+    final int CANVAS_W = 1500;
+    final int CANVAS_H = 800;
     // 左のUIエリアの幅
     final int MENU_W = 300;
     // 画像
@@ -28,24 +28,27 @@ public class EditWindow extends JFrame {
     // 読み込んだ画像のサイズ
     int scaledWidth;
     int scaledHeight;
-    //縮小した倍率
+    // 縮小した倍率
     double scale;
 
-    //自分自身がインスタンス化されているかかのフラグ
-    //getTaskをstaticにしているため
+    // 自分自身がインスタンス化されているかかのフラグ
+    // 2つめのコンストラクタによって編集ウィンドウが立ち上げられていないのに裏でインスタンス化する場合があるため、
+    // どちらのコンストラクタでインスタンス化されたかの判別に使用
     boolean isInstantiated;
 
-    //UI部品
+    // UI部品
     EditCanvas canvas;
     JFrame editFrame;
     JPanel panel_image, panel_side;
-    JButton btn_addTrim;
+    JButton btn_addTrim, btn_addGrad;
     JLabel picLabel;
 
+    /**編集ウィンドウが立ち上げられたときに呼ばれるコンストラクタ */
     EditWindow() {
         createEditWindow();
         isInstantiated = true;
     }
+    /**MainWindow起動時にリスナー設定で必要なため、UI表示を行わずインスタンス化するときに使う特別なコンストラクタ */
     EditWindow(boolean dummy) {
         isInstantiated = false;
     }
@@ -66,21 +69,24 @@ public class EditWindow extends JFrame {
 
         panel_side = new JPanel();
         panel_side.setPreferredSize(new Dimension(MENU_W, CANVAS_H + 50));
-        btn_addTrim = new JButton("トリミング位置を指定");
-        btn_addTrim.setBackground(new Color(255,255,255));
+        btn_addTrim = new JButton("トリミング");
+        btn_addTrim.setBackground(new Color(255, 255, 255));
         btn_addTrim.setPreferredSize(new Dimension(MENU_W - 50, 50));
         panel_side.add(btn_addTrim);
+
+        btn_addGrad = new JButton("ぼかし");
+        btn_addGrad.setBackground(new Color(255, 255, 255));
+        btn_addGrad.setPreferredSize(new Dimension(MENU_W - 50, 50));
+        panel_side.add(btn_addGrad);
 
         // クリップボードから画像取得してフレーム内に表示
         image = getClipboardImage();
 
-
-
         if (image != null) {
-        System.out.printf("編集画面立ち上げ時画像(縮小あと):%d,%d\n",image.getWidth(),image.getHeight());
-        // System.out.printf("編集画面立ち上げ時画像(縮小あと):%d,%d\n",scaledWidth,scaledHeight);
+            System.out.printf("編集画面立ち上げ時画像(縮小あと):%d,%d\n", image.getWidth(), image.getHeight());
+            // System.out.printf("編集画面立ち上げ時画像(縮小あと):%d,%d\n",scaledWidth,scaledHeight);
             // EditCanvasのインスタンスを生成
-            canvas = new EditCanvas(scaledWidth, scaledHeight, scale,image);
+            canvas = new EditCanvas(scaledWidth, scaledHeight, scale, image);
             // JPanel pane = new JPanel();
             editFrame.getContentPane().add(panel_image);
             panel_image.add(canvas, BorderLayout.CENTER);
@@ -88,15 +94,31 @@ public class EditWindow extends JFrame {
             // トリミングボタンのリスナー設定
             btn_addTrim.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    canvas.task.setType(1);//加工種類をトリミングに設定
-                    System.out.println("set");
+                    canvas.task.setType(1);// 加工種類をトリミングに設定
+                    System.out.println("set:1");
                     if (canvas.mode != 1) {
                         canvas.mode = -1;
                         btn_addTrim.setBackground(new Color(82, 165, 255));
                         canvas.repaint();
                     } else {
                         canvas.mode = 0;
-                        btn_addTrim.setBackground(new Color(255,255,255));
+                        btn_addTrim.setBackground(new Color(255, 255, 255));
+                    }
+                }
+            });
+
+            // ぼかしボタンのリスナー設定
+            btn_addGrad.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    canvas.task.setType(2);// 加工種類をぼかしに設定
+                    System.out.println("set:2");
+                    if (canvas.mode != 1) {
+                        canvas.mode = -1;
+                        btn_addGrad.setBackground(new Color(82, 165, 255));
+                        canvas.repaint();
+                    } else {
+                        canvas.mode = 0;
+                        btn_addGrad.setBackground(new Color(255, 255, 255));
                     }
                 }
             });
@@ -125,7 +147,7 @@ public class EditWindow extends JFrame {
         try {
             // buferedImageにキャストして代入
             BufferedImage img = (BufferedImage) clip.getData(DataFlavor.imageFlavor);
-            System.out.printf("編集画面立ち上げ時画像(縮小前):%d,%d\n",img.getWidth(),img.getHeight());
+            System.out.printf("編集画面立ち上げ時画像(縮小前):%d,%d\n", img.getWidth(), img.getHeight());
 
             // 縮小後の縦横サイズを保持する変数
             scaledWidth = img.getWidth();
@@ -135,16 +157,15 @@ public class EditWindow extends JFrame {
             if (img.getHeight() > CANVAS_H) {
                 scaledHeight = CANVAS_H;
                 scaledWidth = (int) (scaledHeight * img.getWidth() / img.getHeight());
-                scale = ((double)scaledHeight/(double)img.getHeight());
+                scale = ((double) scaledHeight / (double) img.getHeight());
             }
             if (img.getWidth() > CANVAS_W) {
                 scaledWidth = CANVAS_W;
                 scaledHeight = (int) (scaledWidth * img.getHeight() / img.getWidth());
-                scale = ((double)scaledWidth/(double)img.getWidth());
-            }   
-            System.out.println((double)scaledWidth/(double)img.getWidth());
-            System.out.println(1.0/20.0);
-
+                scale = ((double) scaledWidth / (double) img.getWidth());
+            }
+            System.out.println((double) scaledWidth / (double) img.getWidth());
+            System.out.println(1.0 / 20.0);
 
             // 画像がウィンドウに収まるように縮小
             // 縮小を行っているgetScaledInstanceImageメソッドは戻り値がImageなので、Graphicsを使ってBufferedImageへの変換も行う
@@ -171,13 +192,13 @@ public class EditWindow extends JFrame {
     /**
      * 設定されたTaskオブジェクトを返す
      */
-    public Task getTask(){
-        if(isInstantiated&&this.isImage()){
+    public Task getTask() {
+        if (isInstantiated && this.isImage()) {
             return canvas.task;
-        }else{
+        } else {
             return null;
         }
-        
+
     }
 
 }
@@ -204,16 +225,16 @@ class EditCanvas extends Canvas implements MouseListener, MouseMotionListener {
     int x, y;
     // ドラッグ開始座標
     int px, py;
-    //マウスをドラッグして描く四角の縦横
-    int ow,oh;
-    //マウスをドラッグして描く四角の支点
-    int sx,sy;
+    // マウスをドラッグして描く四角の縦横
+    int ow, oh;
+    // マウスをドラッグして描く四角の支点
+    int sx, sy;
     // 加工内容を表すデータ
     public Task task = new Task();
-    //表示している画像の縮小倍率
+    // 表示している画像の縮小倍率
     double scale;
 
-    EditCanvas(int w, int h, double scale,BufferedImage image) {
+    EditCanvas(int w, int h, double scale, BufferedImage image) {
         this.image = image;
         width = w;
         height = h;
@@ -251,7 +272,7 @@ class EditCanvas extends Canvas implements MouseListener, MouseMotionListener {
         g2d.drawImage(image, 0, 0, null);
         switch (mode) {
             case 1:
-                
+
                 if (x < px) {
                     sx = x;
                 } else {
@@ -262,19 +283,19 @@ class EditCanvas extends Canvas implements MouseListener, MouseMotionListener {
                 } else {
                     sy = py;
                 }
-                // System.out.println(ow);  
-                g2d.setColor(new Color(21, 97, 178,80));
+                // System.out.println(ow);
+                g2d.setColor(new Color(21, 97, 178, 80));
                 g2d.fillRect(0, 0, width, sy);
                 g2d.fillRect(0, sy, sx, oh);
-                g2d.fillRect(sx+ow, sy, width-ow-sx, oh);
-                g2d.fillRect(0, sy+oh, width, height-sy-oh);
+                g2d.fillRect(sx + ow, sy, width - ow - sx, oh);
+                g2d.fillRect(0, sy + oh, width, height - sy - oh);
 
                 g2d.setColor(Color.ORANGE);
-                g2d.drawRect(sx,sy,ow-1,oh-1);
+                g2d.drawRect(sx, sy, ow - 1, oh - 1);
                 break;
             case -1:
-                g2d.setColor(new Color(21, 97, 178,80));
-                g2d.fillRect(0,0,width,height);
+                g2d.setColor(new Color(21, 97, 178, 80));
+                g2d.fillRect(0, 0, width, height);
                 mode = 1;
         }
         g.drawImage(cImage, 0, 0, null);
@@ -317,7 +338,7 @@ class EditCanvas extends Canvas implements MouseListener, MouseMotionListener {
     public void mouseReleased(MouseEvent e) {
         // mode = 0;
         // 加工内容を表すデータ
-        task.setRange(undoScale(sx),undoScale(sy),undoScale(ow),undoScale(oh));
+        task.setRange(undoScale(sx), undoScale(sy), undoScale(ow), undoScale(oh));
     }
 
     @Override
@@ -328,19 +349,19 @@ class EditCanvas extends Canvas implements MouseListener, MouseMotionListener {
     public void mouseExited(MouseEvent e) {
     }
 
-    private int clamp(int n, int max){
-        if(n<0){
+    private int clamp(int n, int max) {
+        if (n < 0) {
             return 0;
         }
-        if(n>max){
+        if (n > max) {
             return max;
         }
         return n;
     }
 
-    private int undoScale(int n){
+    private int undoScale(int n) {
         double n2 = n;
-        int res = (int)(n2/scale);
+        int res = (int) (n2 / scale);
         return res;
     }
 }

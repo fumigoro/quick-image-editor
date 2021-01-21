@@ -133,9 +133,10 @@ public class MainWindow extends JFrame {
             public void windowActivated(WindowEvent e) {
                 // System.out.println("activate");
                 // TODO 作成された加工タスクに関する情報をeditWindowから取得する
+                // リスナー設定のためにダミーで作られたインスタンスの場合、getTask()からNullが返される。
                 if(editWindow.getTask()!=null){
                     addTask(editWindow.getTask());
-                    // System.out.println("addtask");
+                    System.out.println("addtask");
                 }
                 // System.out.println(editWindow.getHoge());
             }
@@ -206,7 +207,16 @@ public class MainWindow extends JFrame {
                 // TODO: 各種加工処理
                 
                 //ぼかし
-                
+                for(int i=0;i<taskList.size();i++){
+                    Task tmpTask = taskList.get(i);
+                    //タスクの有効性を確認
+                    if(tmpTask.active){
+                        //設定された加工内容がぼかしかを確認
+                        if(tmpTask.type==2){
+                            img = tmpTask.run(img);
+                        }
+                    }
+                }
                 
                 
                 //トリミング
@@ -218,7 +228,7 @@ public class MainWindow extends JFrame {
                         if(tmpTask.type==1){
                             System.out.printf("読み込み時画像:%d,%d\n",img.getWidth(),img.getHeight());
                             img = tmpTask.run(img);
-
+                            break;//トリミングは1回だけ
                         }
                     }
                 }
@@ -564,7 +574,7 @@ public class MainWindow extends JFrame {
 
                 break;
             case 2://ぼかし
-
+                labelText = "ぼかし "+taskList.get(countTasks).getRangeS();
                 break;
             // case 3://リサイズ
             //     labelText = "リサイズ"
