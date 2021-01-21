@@ -5,6 +5,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.*;
+import java.lang.Math;
 
 public class Task {
     public int type;
@@ -19,7 +20,7 @@ public class Task {
     String type2 = "ぼかし";
     // ぼかしの強度
     /** grad_size*2+1 でぼかしの畳込みを行う画素の横幅(=縦)になる*/
-    int grad_size = 1;
+    int grad_size = 8;
 
     /**
      * type 1:トリミング 2:ぼかし
@@ -188,16 +189,16 @@ public class Task {
         System.out.printf("%d,%d => %d,%d\n", this.x, this.y, this.x + this.width, this.y + this.height);
         for (int grad_y = this.y; grad_y < this.y + this.height; grad_y++) {
             for (int grad_x = this.x; grad_x < this.x + this.width; grad_x++) {
-                if ((0 == grad_x) || (0 == grad_y) || (grad_x == (IMG_WIDTH - 1)) || (grad_y == (IMG_HEIGHT - 1))) {
-                    // (grad_x,grad_y)が画像の外枠の場合、元の画像の色を取得
+                if ((grad_x - grad_size < 0) || (grad_y - grad_size < 0) || (grad_x + grad_size >= IMG_WIDTH) || (grad_y + grad_size >= IMG_HEIGHT)) {
+                    // 畳み込みの範囲が画像から飛び出す場合、元の画像の色をそのまま取得
                     newcolor = img.getRGB(grad_x, grad_y);
                 } else {
-                    // ９画素の平均値を計算
+                    // (grad_size*2+1)^2 画素の平均値を計算
                     sumr = 0; // Ｒ値の合計
                     sumg = 0; // Ｇ値の合計
                     sumb = 0; // Ｂ値の合計
-                    for (int grad_dy = -1; grad_dy <= 1; grad_dy++) {
-                        for (int grad_dx = -1; grad_dx <= 1; grad_dx++) {
+                    for (int grad_dy = -1*grad_size; grad_dy <= grad_size; grad_dy++) {
+                        for (int grad_dx = -1*grad_size; grad_dx <= grad_size; grad_dx++) {
                             // (grad_x,grad_y)の色を取得
                             color = img.getRGB(grad_x + grad_dx, grad_y + grad_dy);
 
@@ -212,9 +213,9 @@ public class Task {
                             sumb += b;
                         }
                     }
-                    sumr /= 9; // Ｒ値の平均
-                    sumg /= 9; // Ｇ値の平均
-                    sumb /= 9; // Ｂ値の平均
+                    sumr /= (int) Math.pow(grad_size*2+1,2); // Ｒ値の平均
+                    sumg /= (int) Math.pow(grad_size*2+1,2); // Ｇ値の平均
+                    sumb /= (int) Math.pow(grad_size*2+1,2); // Ｂ値の平均
 
                     // r,g,bの色を合成
                     newcolor = (sumr << 16) + (sumg << 8) + sumb;
