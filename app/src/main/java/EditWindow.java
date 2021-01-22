@@ -3,6 +3,11 @@ package quick.image.editor;
 import java.awt.*;
 import javax.swing.*;
 
+import javax.swing.JSlider;
+import javax.swing.border.*;
+import javax.swing.event.*;
+
+
 import quick.image.editor.Task;
 
 import java.awt.event.*;
@@ -30,6 +35,8 @@ public class EditWindow extends JFrame {
     int scaledHeight;
     // 縮小した倍率
     double scale;
+    // ぼかしのサイズ
+    int sliderValue;
 
     // 自分自身がインスタンス化されているかかのフラグ
     // 2つめのコンストラクタによって編集ウィンドウが立ち上げられていないのに裏でインスタンス化する場合があるため、
@@ -42,6 +49,8 @@ public class EditWindow extends JFrame {
     JPanel panel_image, panel_side;
     JButton btn_addTrim, btn_addGrad;
     JLabel picLabel;
+    JSlider grad_slider;
+    JLabel sliderLabel;
 
     /**編集ウィンドウが立ち上げられたときに呼ばれるコンストラクタ */
     EditWindow() {
@@ -69,15 +78,36 @@ public class EditWindow extends JFrame {
 
         panel_side = new JPanel();
         panel_side.setPreferredSize(new Dimension(MENU_W, CANVAS_H + 50));
+
+        JPanel panel_side1 = new JPanel();
+        Border lineBorder_1 = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
+        TitledBorder titledBorder_1 = BorderFactory.createTitledBorder(lineBorder_1, "トリミング");
+        panel_side1.setBorder(titledBorder_1);
+
         btn_addTrim = new JButton("トリミング");
         btn_addTrim.setBackground(new Color(255, 255, 255));
         btn_addTrim.setPreferredSize(new Dimension(MENU_W - 50, 50));
-        panel_side.add(btn_addTrim);
+        panel_side1.add(btn_addTrim);
+
+        
+        JPanel panel_side2 = new JPanel();
+        panel_side2.setLayout(new BorderLayout());
+        Border lineBorder_2 = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
+        TitledBorder titledBorder_2 = BorderFactory.createTitledBorder(lineBorder_2, "ぼかし");
+        panel_side2.setBorder(titledBorder_2);
 
         btn_addGrad = new JButton("ぼかし");
         btn_addGrad.setBackground(new Color(255, 255, 255));
         btn_addGrad.setPreferredSize(new Dimension(MENU_W - 50, 50));
-        panel_side.add(btn_addGrad);
+        panel_side2.add(btn_addGrad,BorderLayout.NORTH);
+
+        grad_slider = new JSlider();
+        panel_side2.add(grad_slider,BorderLayout.CENTER);
+        sliderLabel = new JLabel(String.valueOf(grad_slider.getValue()));
+        panel_side2.add(sliderLabel,BorderLayout.SOUTH);
+
+        panel_side.add(panel_side1);
+        panel_side.add(panel_side2);
 
         // クリップボードから画像取得してフレーム内に表示
         image = getClipboardImage();
@@ -122,6 +152,15 @@ public class EditWindow extends JFrame {
                     }
                 }
             });
+
+            //ぼかしサイズのスライダーのリスナー設定
+            grad_slider.addChangeListener(new ChangeListener(){
+                public void stateChanged(ChangeEvent e){
+                    sliderValue = grad_slider.getValue();
+                    sliderLabel.setText(String.valueOf(sliderValue));
+                }
+            });
+
             // picLabel = new JLabel(new ImageIcon(image));
             // picLabel.setLayout(new BorderLayout());
             // panel_image.add(picLabel, BorderLayout.CENTER);
@@ -194,6 +233,8 @@ public class EditWindow extends JFrame {
      */
     public Task getTask() {
         if (isInstantiated && this.isImage()) {
+            //ぼかしの程度を決めるスライダーの値(0~100)をセット
+            canvas.task.setGradSize(this.sliderValue);
             return canvas.task;
         } else {
             return null;
@@ -271,8 +312,8 @@ class EditCanvas extends Canvas implements MouseListener, MouseMotionListener {
 
         g2d.drawImage(image, 0, 0, null);
         switch (mode) {
+            //マウスドラッグ中
             case 1:
-
                 if (x < px) {
                     sx = x;
                 } else {
@@ -293,6 +334,7 @@ class EditCanvas extends Canvas implements MouseListener, MouseMotionListener {
                 g2d.setColor(Color.ORANGE);
                 g2d.drawRect(sx, sy, ow - 1, oh - 1);
                 break;
+            //ドラッグ開始前
             case -1:
                 g2d.setColor(new Color(21, 97, 178, 80));
                 g2d.fillRect(0, 0, width, height);
@@ -339,6 +381,7 @@ class EditCanvas extends Canvas implements MouseListener, MouseMotionListener {
         // mode = 0;
         // 加工内容を表すデータ
         task.setRange(undoScale(sx), undoScale(sy), undoScale(ow), undoScale(oh));
+
     }
 
     @Override

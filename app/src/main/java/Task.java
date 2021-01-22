@@ -20,7 +20,8 @@ public class Task {
     String type2 = "ぼかし";
     // ぼかしの強度
     /** grad_size*2+1 でぼかしの畳込みを行う画素の横幅(=縦)になる*/
-    int grad_size = 8;
+    int grad_size = 3;
+    final int GRAD_SIZE_MAX = 20;
 
     /**
      * type 1:トリミング 2:ぼかし
@@ -29,15 +30,15 @@ public class Task {
     // Task(int rangeSW,int rangeSH,int rangeEW,int rangeEH,int type){
     Task() {
 
-        label = new JLabel();
-        deleteBtn = new JButton("削除");
+        this.label = new JLabel();
+        this.deleteBtn = new JButton("削除");
         deleteBtn.setMargin(new Insets(0, 0, 0, 0));
 
-        panel = new JPanel();
+        this.panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.setPreferredSize(new Dimension(230, 30));
-        panel.add(label, BorderLayout.WEST);
-        panel.add(deleteBtn, BorderLayout.EAST);
+        panel.add(this.label, BorderLayout.WEST);
+        panel.add(this.deleteBtn, BorderLayout.EAST);
         panel.setVisible(true);
 
         deleteBtn.addActionListener(new ActionListener() {
@@ -48,7 +49,7 @@ public class Task {
             }
         });
         // System.out.println("完了");
-        active = true;
+        this.active = true;
     }
 
     // public String getRangeS(){
@@ -56,8 +57,8 @@ public class Task {
     // "("+String.valueOf(rangeS.width)+","+String.valueOf(rangeS.height)+"),("+String.valueOf(rangeE.width)+","+String.valueOf(rangeE.height)+")";
     // }
     public String getRangeS() {
-        return "(" + String.valueOf(x) + "," + String.valueOf(y) + "),(" + String.valueOf(x + width) + ","
-                + String.valueOf(y + height) + ")";
+        return "(" + String.valueOf(this.x) + "," + String.valueOf(this.y) + "),(" + String.valueOf(this.x + this.width) + ","
+                + String.valueOf(this.y + this.height) + ")";
     }
 
     public JPanel getGUI() {
@@ -84,11 +85,11 @@ public class Task {
     }
 
     public String getTypeS() {
-        switch (type) {
+        switch (this.type) {
             case 1:
-                return type1;
+                return this.type1;
             case 2:
-                return type2;
+                return this.type2;
             default:
                 // throw new Exception("Processing type is null.");
                 return null;
@@ -100,20 +101,20 @@ public class Task {
     public BufferedImage run(BufferedImage img) {
         // if(ximg.getWidth());
         // img.getHeight();
-        switch (type) {
+        switch (this.type) {
             case 1:// トリミング
                 System.out.println("トリミング");
 
-                if (x + width > img.getWidth() - 1) {
-                    System.out.printf("W:%d => %d\n", width, img.getWidth() - x);
-                    width = img.getWidth() - x;
+                if (this.x + this.width > img.getWidth() - 1) {
+                    System.out.printf("W:%d => %d\n", this.width, img.getWidth() - this.x);
+                    this.width = img.getWidth() - x;
                 }
-                if (y + height > img.getHeight() - 1) {
-                    System.out.printf("H:%d => %d\n", height, img.getHeight() - y);
-                    height = img.getHeight() - y;
+                if (this.y + this.height > img.getHeight() - 1) {
+                    System.out.printf("H:%d => %d\n", this.height, img.getHeight() - this.y);
+                    this.height = img.getHeight() - y;
                 }
                 // System.out.printf("%d,%d,%d,%d\n",x,y,x+width,y+height,mg.getHeight());
-                img = img.getSubimage(x, y, width, height);
+                img = img.getSubimage(this.x, this.y, this.width, this.height);
                 return img;
             case 2:// ぼかし
                 System.out.println("ぼかし");
@@ -126,13 +127,26 @@ public class Task {
         }
 
     }
+    //ぼかし具合を0~100で表した値を受け取り、セットする
+    public void setGradSize(int size){
+        //0~100で来るので最大値の割合として換算し代入
+        System.out.printf("this.grad_size:%d\n",this.grad_size);
+        this.grad_size = (int)((double)this.GRAD_SIZE_MAX * ((double)size / 100.0));
+        System.out.printf("this.grad_size:%d\n",this.grad_size);
+        System.out.printf("size:%d\n",size);
+
+    }
+
+    public String getGradSizeAsString(){
+        return String.valueOf(this.grad_size);
+    }
 
     /** 加工に必要なパラメーターが揃っているか確認するメソッド */
     public boolean isReady() {
-        if (!(x >= 0) || !(y >= 0) || !(width >= 0) || !(height >= 0)) {
+        if (!(this.x >= 0) || !(this.y >= 0) || !(this.width >= 0) || !(this.height >= 0)) {
             return false;
         }
-        if (!(type >= 1) || !(type <= 2)) {
+        if (!(this.type >= 1) || !(this.type <= 2)) {
             return false;
         }
         return true;
@@ -163,13 +177,13 @@ public class Task {
         final int IMG_HEIGHT = img.getHeight();
 
         // 指定範囲が画像サイズを超えていないか確認
-        if (x + width > img.getWidth() - 1) {
-            System.out.printf("W:%d => %d\n", width, img.getWidth() - x);
-            width = img.getWidth() - x;
+        if (this.x + this.width > img.getWidth() - 1) {
+            System.out.printf("W:%d => %d\n", this.width, img.getWidth() - this.x);
+            this.width = img.getWidth() - this.x;
         }
-        if (y + height > img.getHeight() - 1) {
-            System.out.printf("H:%d => %d\n", height, img.getHeight() - y);
-            height = img.getHeight() - y;
+        if (this.y + this.height > img.getHeight() - 1) {
+            System.out.printf("H:%d => %d\n", this.height, img.getHeight() - this.y);
+            this.height = img.getHeight() - this.y;
         }
 
         // 新しい画像を作成
