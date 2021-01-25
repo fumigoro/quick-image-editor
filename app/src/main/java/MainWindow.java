@@ -153,7 +153,7 @@ public class MainWindow extends JFrame {
                 // リスナー設定のためにダミーで作られたインスタンスの場合、getTask()からNullが返される。
                 if (editWindow.getTask() != null) {
                     addTask(editWindow.getTask());
-                    System.out.println("addtask");
+                    // System.out.println("addtask");
                 }
                 // System.out.println(editWindow.getHoge());
             }
@@ -299,19 +299,19 @@ public class MainWindow extends JFrame {
         editWindow = new EditWindow();
         if (editWindow.isImage() == false) {
             updateMessage("クリップボードに画像なし");
-            // try {
-            //     Robot robot = new Robot();
-            //     robot.keyPress(KeyEvent.VK_WINDOWS);
-            //     robot.keyPress(KeyEvent.VK_SHIFT);
-            //     robot.keyPress(KeyEvent.VK_S);
-            //     robot.delay(10);
-            //     robot.keyRelease(KeyEvent.VK_WINDOWS);
-            //     robot.keyRelease(KeyEvent.VK_SHIFT);
-            //     robot.keyRelease(KeyEvent.VK_S);
+            try {
+                Robot robot = new Robot();
+                robot.keyPress(KeyEvent.VK_WINDOWS);
+                robot.keyPress(KeyEvent.VK_SHIFT);
+                robot.keyPress(KeyEvent.VK_S);
+                robot.delay(10);
+                robot.keyRelease(KeyEvent.VK_WINDOWS);
+                robot.keyRelease(KeyEvent.VK_SHIFT);
+                robot.keyRelease(KeyEvent.VK_S);
                 
-            // } catch (Exception e) {
-            //     //TODO: handle exception
-            // }
+            } catch (Exception e) {
+                //TODO: handle exception
+            }
             return;
         } else {
             // addTask(10,10,20,20,1);
@@ -620,7 +620,11 @@ public class MainWindow extends JFrame {
         // System.out.println("add");
         // 加工内容が設定されていない場合
         if (task.isReady() != true) {
-            System.out.println("加工内容未設定");
+            // System.out.println("加工内容未設定タスク");
+            return;
+        }
+        if(!(task.active)){
+            // System.out.println("削除済みタスク");
             return;
         }
         taskList.add(task);
