@@ -57,7 +57,7 @@ public class Task {
     // "("+String.valueOf(rangeS.width)+","+String.valueOf(rangeS.height)+"),("+String.valueOf(rangeE.width)+","+String.valueOf(rangeE.height)+")";
     // }
     public String getRangeS() {
-        return "(" + String.valueOf(this.x) + "," + String.valueOf(this.y) + "),(" + String.valueOf(this.x + this.width) + ","
+        return "(" + String.valueOf(this.x) + "," + String.valueOf(this.y) + ")=>(" + String.valueOf(this.x + this.width) + ","
                 + String.valueOf(this.y + this.height) + ")";
     }
 

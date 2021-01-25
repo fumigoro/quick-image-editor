@@ -574,7 +574,7 @@ public class MainWindow extends JFrame {
 
                 break;
             case 2://ぼかし
-                labelText = "ぼかし "+taskList.get(countTasks).getRangeS()+"sixe:"+task.getGradSizeAsString();
+                labelText = "ぼかし "+taskList.get(countTasks).getRangeS()+"size:"+task.getGradSizeAsString();
                 break;
             // case 3://リサイズ
             //     labelText = "リサイズ"

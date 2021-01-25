@@ -36,7 +36,7 @@ public class EditWindow extends JFrame {
     // 縮小した倍率
     double scale;
     // ぼかしのサイズ
-    int sliderValue;
+    int sliderValue = 50;
 
     // 自分自身がインスタンス化されているかかのフラグ
     // 2つめのコンストラクタによって編集ウィンドウが立ち上げられていないのに裏でインスタンス化する場合があるため、
