@@ -103,7 +103,9 @@ public class EditWindow extends JFrame {
 
         grad_slider = new JSlider();
         panel_side2.add(grad_slider,BorderLayout.CENTER);
-        sliderLabel = new JLabel(String.valueOf(grad_slider.getValue()));
+        sliderLabel = new JLabel();
+        sliderLabel.setText(String.valueOf(sliderValue)+"% : "+String.valueOf( (int) ((double) Task.GRAD_SIZE_MAX * ((double) sliderValue / 100.0))*2+1)+"px");
+
         panel_side2.add(sliderLabel,BorderLayout.SOUTH);
 
         panel_side.add(panel_side1);
@@ -157,7 +159,9 @@ public class EditWindow extends JFrame {
             grad_slider.addChangeListener(new ChangeListener(){
                 public void stateChanged(ChangeEvent e){
                     sliderValue = grad_slider.getValue();
-                    sliderLabel.setText(String.valueOf(sliderValue));
+                    sliderLabel.setText(String.valueOf(sliderValue)+"% : "+String.valueOf( (int) ((double) Task.GRAD_SIZE_MAX * ((double) sliderValue / 100.0))*2+1)+"px");
+                    
+                    // sliderLabel.setText(String.valueOf(sliderValue)+"% : "+String.valueOf( (int) ((double) this.GRAD_SIZE_MAX * ((double) size / 100.0))*2+1)+"px");
                 }
             });
 

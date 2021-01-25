@@ -14,6 +14,7 @@ public class Settings{
     public Dimension primarySize;//現在選択されているサイズが入る
     public Dimension presetSize1;
     public Dimension presetSize2;
+    public boolean keepCount;
     Settings(){
     }
 

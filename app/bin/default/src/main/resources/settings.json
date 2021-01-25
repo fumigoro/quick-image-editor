@@ -22,7 +22,9 @@
         "width": 1920
     },
     "presetSize2":{
-        "height": 720,
-        "width": 1080
-    }
+        "height": 540,
+        "width": 960
+    },
+    //前回起動時から連番を引き継ぐかどうか
+    "keepCount": true
 }

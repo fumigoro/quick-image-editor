@@ -8,9 +8,11 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.*;
+import java.awt.event.KeyEvent;
 import java.awt.image.*;
 import java.awt.*;
 import java.awt.Container;
+import java.awt.Robot;
 
 import java.io.*;
 import java.io.IOException;
@@ -20,7 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
+import java.util.Properties;
 
 import javax.imageio.*;
 
@@ -51,14 +53,14 @@ public class MainWindow extends JFrame {
     JCheckBox cb_fixAspect, cb_resize;
     JMenuBar menubar;
     JMenu menu_1, menu_2, menu_3;
-    JMenuItem menuitem1_1, menuitem1_2, menuitem1_3, menuitem3_resetCount, menuitem3_setDefaultDir;
+    JMenuItem menuitem1_1, menuitem1_2, menuitem1_3, menuitem3_resetCount, menuitem3_setDefaultDir,menuitem3_saveCongig;
     JProgressBar pb;
 
     String format;// 画像のファイル形式
 
     EditWindow editWindow;
 
-    //タスク一覧
+    // タスク一覧
     // JLabel[] label_tasks = new JLabel[10];
     // JButton[] btn_tasks = new JButton[10];
     int countTasks = 0;
@@ -68,13 +70,17 @@ public class MainWindow extends JFrame {
      * その他変数
      */
 
-    int imageCounter;// 出力した画像の枚数をカウントする
+    int imageCounter = 0;// 出力した画像の枚数をカウントする
     int lineCounter = 0;// メッセージ欄の行数をカウントする
 
     Settings setting;// 設定ファイルから読み込んだ設定を保存する
+
+    //前回使用時の設定などを保存
+    Properties config = new Properties();
+
     // 設定ファイルsettings.jsonの場所を指定
     static final String SETTING_FILE_PATH = "src/main/resources/settings.json";
-    // static final String INIT_FILE_PATH = "src/main/resources/common.properties";
+    static final String CONFIG_FILE_PATH = "src/main/resources/config.properties";
 
     /**
      * コンストラクタ
@@ -88,13 +94,17 @@ public class MainWindow extends JFrame {
             // 読み込み失敗時は以降の処理を行わない
             return;
         }
-        // propertiesファイルの読み込み
-        // ResourceBundle rb = ResourceBundle.getBundle(INIT_FILE_PATH);
-        // System.out.println(rb.getString("id"));
+        //前回起動時の記録ファイルを読み込み
+        loadConfig();
+        //前回起動時から連番を引き継ぐ設定のオンオフ確認、それに応じて設定
+        if(setting.keepCount){
+            this.imageCounter = Integer.parseInt(config.getProperty("imageCounter"));
+        }else{
+            this.imageCounter = 0;
+        }
+        
         // 各種UI部品をつくる
         createMainWindow();
-        imageCounter = 0;
-
         /**
          * 各リスナーの設定 各部品ごとに個別のリスナー(匿名)クラスを使用し、その中で各処理のメソッドを呼ぶ。
          */
@@ -120,15 +130,15 @@ public class MainWindow extends JFrame {
         });
 
         // サイズプリセットボタン1
-        btn_presetSize1.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e){
+        btn_presetSize1.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
                 btn_presetSize1_Listener();
             }
         });
 
         // サイズプリセットボタン2
-        btn_presetSize2.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e){
+        btn_presetSize2.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
                 btn_presetSize2_Listener();
             }
         });
@@ -141,7 +151,7 @@ public class MainWindow extends JFrame {
                 // System.out.println("activate");
                 // TODO 作成された加工タスクに関する情報をeditWindowから取得する
                 // リスナー設定のためにダミーで作られたインスタンスの場合、getTask()からNullが返される。
-                if(editWindow.getTask()!=null){
+                if (editWindow.getTask() != null) {
                     addTask(editWindow.getTask());
                     System.out.println("addtask");
                 }
@@ -178,27 +188,33 @@ public class MainWindow extends JFrame {
                 // System.out.println("opend");
             }
         });
+        // configファイルに今の設定を保存
+        saveConfig();
 
     }
-    //プリセットボタン1の処理
-    private void btn_presetSize1_Listener(){
+
+    // プリセットボタン1の処理
+    private void btn_presetSize1_Listener() {
         txt_imageSizeH.setText(String.valueOf(setting.presetSize1.height));
         txt_imageSizeW.setText(String.valueOf(setting.presetSize1.width));
     }
-    //プリセットボタン2の処理
-    private void btn_presetSize2_Listener(){
+
+    // プリセットボタン2の処理
+    private void btn_presetSize2_Listener() {
         txt_imageSizeH.setText(String.valueOf(setting.presetSize2.height));
         txt_imageSizeW.setText(String.valueOf(setting.presetSize2.width));
     }
 
-
     // Goボタン押下時の処理
     private void btn_go_Listener() {
-        //設定ファイルの読み込み
+        // GUI上の設定内容の読み込み
         boolean loadSettingFromGUI = loadSettingFromGUI();
-        if(!loadSettingFromGUI){
+        if (!loadSettingFromGUI) {
             return;
         }
+
+        
+
         Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
         Transferable data = clip.getContents(null);
         // 画像データかどうか判定
@@ -211,42 +227,37 @@ public class MainWindow extends JFrame {
                 imageCounter++;
                 // クリップボード上のデータを取得しBufferedImageへキャスト
                 BufferedImage img = (BufferedImage) clip.getData(DataFlavor.imageFlavor);// 例外：UnsupportedFlavorException
-                //ぼかし
-                for(int i=0;i<taskList.size();i++){
+
+                // ぼかし
+                for (int i = 0; i < taskList.size(); i++) {
                     Task tmpTask = taskList.get(i);
-                    //タスクの有効性を確認
-                    if(tmpTask.active){
-                        //設定された加工内容がぼかしかを確認
-                        if(tmpTask.type==2){
-                            System.out.println("ぼかし適用中...");
-                            // panel_L3.add(this.pb);
+                    // タスクの有効性を確認
+                    if (tmpTask.active) {
+                        // 設定された加工内容がぼかしかを確認
+                        if (tmpTask.type == 2) {
+                            
                             img = tmpTask.run(img);
                             System.out.println("完了");
-
                         }
                     }
                 }
 
-                
-                
-                //トリミング
-                for(int i=0;i<taskList.size();i++){
+                // トリミング
+                for (int i = 0; i < taskList.size(); i++) {
                     Task tmpTask = taskList.get(i);
-                    //タスクの有効性を確認
-                    if(tmpTask.active){
-                        //設定された加工内容がトリミングかを確認
-                        if(tmpTask.type==1){
+                    // タスクの有効性を確認
+                    if (tmpTask.active) {
+                        // 設定された加工内容がトリミングかを確認
+                        if (tmpTask.type == 1) {
                             // System.out.printf("読み込み時画像:%d,%d\n",img.getWidth(),img.getHeight());
                             img = tmpTask.run(img);
-                            break;//トリミングは1回だけ
+                            break;// トリミングは1回だけ
                         }
                     }
                 }
 
-
-
-                //リサイズ
-                if(setting.resize){
+                // リサイズ
+                if (setting.resize) {
                     System.out.print("サイズ変更中...");
                     img = resizeImage(img);
                     System.out.println("完了");
@@ -258,10 +269,11 @@ public class MainWindow extends JFrame {
                         + setting.format;
                 // 作成したファイルを書き出し(保存)
                 ImageIO.write(img, setting.format, new File(file));// 例外：IOException
-                // System.out.println(file);
-                // System.out.println("saved");
-                pb.setValue(0);
 
+
+
+
+                //完了を通知
                 updateMessage("保存完了：" + setting.fileName + "_" + (String.valueOf(imageCounter)) + "." + setting.format);
             } catch (UnsupportedFlavorException e1) {
                 e1.printStackTrace();
@@ -272,6 +284,10 @@ public class MainWindow extends JFrame {
                 updateMessage("保存に失敗");
                 imageCounter--;
             }
+            //各種パラメーターの更新と保存
+            config.setProperty("imageCounter", String.valueOf(imageCounter));
+            // config.setProperty("day", String.valueOf(imageCounter));
+            saveConfig();
         } else {
             updateMessage("クリップボードに画像なし");
         }
@@ -283,10 +299,24 @@ public class MainWindow extends JFrame {
         editWindow = new EditWindow();
         if (editWindow.isImage() == false) {
             updateMessage("クリップボードに画像なし");
-        }else{
-        // addTask(10,10,20,20,1);
+            // try {
+            //     Robot robot = new Robot();
+            //     robot.keyPress(KeyEvent.VK_WINDOWS);
+            //     robot.keyPress(KeyEvent.VK_SHIFT);
+            //     robot.keyPress(KeyEvent.VK_S);
+            //     robot.delay(10);
+            //     robot.keyRelease(KeyEvent.VK_WINDOWS);
+            //     robot.keyRelease(KeyEvent.VK_SHIFT);
+            //     robot.keyRelease(KeyEvent.VK_S);
+                
+            // } catch (Exception e) {
+            //     //TODO: handle exception
+            // }
+            return;
+        } else {
+            // addTask(10,10,20,20,1);
         }
-        
+
     }
 
     // 連番リセットボタン押下時の処理
@@ -320,18 +350,20 @@ public class MainWindow extends JFrame {
         panel_L.add("North", panel_L1);
 
         panel_L2 = new JPanel();
-        
+
         Border lineBorder = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
         TitledBorder titledBorder = BorderFactory.createTitledBorder(lineBorder, "加工タスク");
         panel_L2.setBorder(titledBorder);
         // panel_L2.setLayout(new GridLayout(1,10));
-        // panel_L2.setLayout(new BoxLayout(mainFlame.getContentPane(), BoxLayout.PAGE_AXIS));
+        // panel_L2.setLayout(new BoxLayout(mainFlame.getContentPane(),
+        // BoxLayout.PAGE_AXIS));
         panel_L2.setLayout(new FlowLayout());
-        panel_L.add("Center",panel_L2);
+        panel_L.add("Center", panel_L2);
 
         // JPanel panel_L3 = new JPanel();
         // Border lineBorder_L3 = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
-        // TitledBorder titledBorder_L3 = BorderFactory.createTitledBorder(lineBorder_L3, "あああ");
+        // TitledBorder titledBorder_L3 =
+        // BorderFactory.createTitledBorder(lineBorder_L3, "あああ");
         // panel_L3.setBorder(titledBorder_L3);
         // pb = new JProgressBar();
         // pb.setPreferredSize(new Dimension(250, 20));
@@ -431,23 +463,25 @@ public class MainWindow extends JFrame {
 
         // メニューバー
         menubar = new JMenuBar();
-        menu_1 = new JMenu("File");
-        menu_2 = new JMenu("Edit");
-        menu_3 = new JMenu("書き出し");
+        // menu_1 = new JMenu("File");
+        // menu_2 = new JMenu("Edit");
+        menu_3 = new JMenu("書き出し設定");
 
-        menuitem1_1 = new JMenuItem("Open");
-        menuitem1_2 = new JMenuItem("Exit");
-        menuitem1_3 = new JMenuItem("保存場所を開く");
+        // menuitem1_1 = new JMenuItem("Open");
+        // menuitem1_2 = new JMenuItem("Exit");
+        // menuitem1_3 = new JMenuItem("保存場所を開く");
         menuitem3_resetCount = new JMenuItem("連番をリセット");
+        menuitem3_saveCongig = new JMenuItem("現在の設定を保存");
         // menuitem3_setDefaultDir = new JMenuItem("現在の保存場所をデフォルトに設定");
-        menu_1.add(menuitem1_1);
-        menu_1.add(menuitem1_2);
-        menu_1.add(menuitem1_3);
+        // menu_1.add(menuitem1_1);
+        // menu_1.add(menuitem1_2);
+        // menu_1.add(menuitem1_3);
 
         menu_3.add(menuitem3_resetCount);
+        menu_3.add(menuitem3_saveCongig);
         // menu_3.add(menuitem3_setDefaultDir);
-        menubar.add(menu_1);
-        menubar.add(menu_2);
+        // menubar.add(menu_1);
+        // menubar.add(menu_2);
         menubar.add(menu_3);
         mainFlame.setJMenuBar(menubar);
 
@@ -469,7 +503,7 @@ public class MainWindow extends JFrame {
                 txtArea_message.append(strs[strs.length - i] + "\n");// 挿入前の行のうちまだ削除対象でないものを入れる
             }
         }
-        txtArea_message.append(String.valueOf(lineCounter) +": "+ m + "\n");// 追加したいメッセージ
+        txtArea_message.append(String.valueOf(lineCounter) + ": " + m + "\n");// 追加したいメッセージ
     }
 
     /**
@@ -513,8 +547,9 @@ public class MainWindow extends JFrame {
 
     /**
      * 画像のリサイズ(縮小)を行う
+     * 
      * @param targetImage 縮小する画像
-     * @return resizedImage 縮小後の画像  
+     * @return resizedImage 縮小後の画像
      */
     private BufferedImage resizeImage(BufferedImage targetImage) {
 
@@ -525,7 +560,7 @@ public class MainWindow extends JFrame {
         // オリジナルの画像の縦横比
         int asp_original = targetImage.getHeight() / targetImage.getWidth();
         int asp_setting = setting.primarySize.height / setting.primarySize.height;
-        if (setting.fixAspectRatio) {//縦横比を固定する場合
+        if (setting.fixAspectRatio) {// 縦横比を固定する場合
             // 指定の出力サイズsetting.defaultSizeを上回る場合に縮小する
             if (asp_original >= asp_setting && targetImage.getHeight() > setting.primarySize.height) {
                 // 縦長画像で、タテのサイズが指定より大きい場合
@@ -554,18 +589,21 @@ public class MainWindow extends JFrame {
         g.dispose();
         return resizedImage;
     }
+
     /**
      * GUI上の入力欄の入力内容を取得しSettingオブジェクトに反映する
+     * 
      * @return boolean 反映に成功したか否か
      */
-    private boolean loadSettingFromGUI(){
+    private boolean loadSettingFromGUI() {
         setting.path = txt_saveDir.getText();
         setting.fileName = txt_fileName.getText();
         // setting.format = ; //(未実装)フォーマットの入力欄
         setting.resize = cb_resize.isSelected();
         setting.fixAspectRatio = cb_fixAspect.isSelected();
-        try {//入力文字列をintへ変換
-            setting.primarySize = new Dimension(Integer.parseInt(txt_imageSizeW.getText()),Integer.parseInt(txt_imageSizeH.getText()));
+        try {// 入力文字列をintへ変換
+            setting.primarySize = new Dimension(Integer.parseInt(txt_imageSizeW.getText()),
+                    Integer.parseInt(txt_imageSizeH.getText()));
         } catch (Exception e) {
             System.out.println("画像サイズが不正です");
             updateMessage("指定された画像サイズが不正です");
@@ -578,10 +616,10 @@ public class MainWindow extends JFrame {
     /**
      * 追加された加工タスクをGUIに表示する
      */
-    private void addTask(Task task){
+    private void addTask(Task task) {
         // System.out.println("add");
-        //加工内容が設定されていない場合
-        if(task.isReady()!=true){
+        // 加工内容が設定されていない場合
+        if (task.isReady() != true) {
             System.out.println("加工内容未設定");
             return;
         }
@@ -590,18 +628,18 @@ public class MainWindow extends JFrame {
         // tasks[countTasks]=null;
         // tasks[countTasks] = new Task(rangeSW,rangeSH,rangeEW,rangeEH,type);
         String labelText = "";
-        switch(task.type){
-            case 1://トリミング
-                // labelText = "トリミング "+tasks[countTasks].getRangeS();
-                labelText = "トリミング "+taskList.get(countTasks).getRangeS();
+        switch (task.type) {
+            case 1:// トリミング
+                   // labelText = "トリミング "+tasks[countTasks].getRangeS();
+                labelText = "トリミング " + taskList.get(countTasks).getRangeS();
 
                 break;
-            case 2://ぼかし
-                labelText = "ぼかし "+taskList.get(countTasks).getRangeS()+"  "+task.getGradSizeAsString();
+            case 2:// ぼかし
+                labelText = "ぼかし " + taskList.get(countTasks).getRangeS() + "  " + task.getGradSizeAsString();
                 break;
             // case 3://リサイズ
-            //     labelText = "リサイズ"
-            //     break;
+            // labelText = "リサイズ"
+            // break;
             default:
 
         }
@@ -613,6 +651,45 @@ public class MainWindow extends JFrame {
         taskList.get(countTasks).panel.setVisible(true);
         // System.out.print(taskList.get(countTasks).active);
         // System.out.println(countTasks);
-        countTasks+=1;
+        countTasks += 1;
+    }
+
+    private void saveConfig() {
+
+
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream(CONFIG_FILE_PATH);
+            config.store(out, "Config Properties");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    private void loadConfig() {
+        FileInputStream in = null;
+        try {
+            in = new FileInputStream(CONFIG_FILE_PATH);
+            config.load(in);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

@@ -23,7 +23,7 @@ public class Task{
     // ぼかしの強度
     /** grad_size*2+1 でぼかしの畳込みを行う画素の横幅(=縦)になる */
     int grad_size = 3;
-    final int GRAD_SIZE_MAX = 20;
+    public static final int GRAD_SIZE_MAX = 20;
 
     /**
      * type 1:トリミング 2:ぼかし
@@ -216,12 +216,10 @@ public class Task{
         for (int grad_y = this.y; grad_y < this.y + this.height; grad_y++) {
             progress_tmp1 = ((double) (grad_y - this.y) / (double) (this.height) * 100.0);
             // pb.setValue((int) progress_tmp1);
-            label.setText(String.valueOf(progress_tmp1));
+            // label.setText(String.valueOf(progress_tmp1));
             System.out.println((int) progress_tmp1);
             
                 for (int grad_x = this.x; grad_x < this.x + this.width; grad_x++) {
-                    // if (((grad_x - grad_size < 0) || (grad_y - grad_size < 0)) || (grad_x +
-                    // grad_size >= IMG_WIDTH) || (grad_y + grad_size >= IMG_HEIGHT)) {
                     // 畳み込みの範囲が画像から飛び出す場合、元の画像の色をそのまま取得
                     // newcolor = img.getRGB(grad_x, grad_y);
 
@@ -264,8 +262,8 @@ public class Task{
                             sumr += r;
                             sumg += g;
                             sumb += b;
-                            // System.out.println((double)(+(grad_dx+grad_size)*(grad_dy+grad_size))/(double)(this.height*this.width*grad_size));
-                            // pb.setValue((int)((double)(grad_x*grad_y*grad_size+(grad_dx+grad_size)*(grad_dy+grad_size)*100)/(double)(this.height*this.width*grad_size)));
+                                                    
+                        
                         }
                     }
                     sumr /= (int) Math.pow(grad_size * 2 + 1, 2); // Ｒ値の平均
@@ -274,39 +272,14 @@ public class Task{
 
                     // r,g,bの色を合成
                     newcolor = (sumr << 16) + (sumg << 8) + sumb;
-
-                    // } else {
-                    // // (grad_size*2+1)^2 画素の平均値を計算
-                    // sumr = 0; // Ｒ値の合計
-                    // sumg = 0; // Ｇ値の合計
-                    // sumb = 0; // Ｂ値の合計
-                    // for (int grad_dy = -1*grad_size; grad_dy <= grad_size; grad_dy++) {
-                    // for (int grad_dx = -1*grad_size; grad_dx <= grad_size; grad_dx++) {
-                    // // (grad_x,grad_y)の色を取得
-                    // color = img.getRGB(grad_x + grad_dx, grad_y + grad_dy);
-
-                    // // 色をr,g,bに分解
-                    // r = (color >> 16) & 0xff;
-                    // g = (color >> 8) & 0xff;
-                    // b = color & 0xff;
-
-                    // //
-                    // sumr += r;
-                    // sumg += g;
-                    // sumb += b;
-                    // }
-                    // }
-                    // sumr /= (int) Math.pow(grad_size*2+1,2); // Ｒ値の平均
-                    // sumg /= (int) Math.pow(grad_size*2+1,2); // Ｇ値の平均
-                    // sumb /= (int) Math.pow(grad_size*2+1,2); // Ｂ値の平均
-
-                    // // r,g,bの色を合成
-                    // newcolor = (sumr << 16) + (sumg << 8) + sumb;
-                    // }
-
+                    
+                    //カラーモデル似合わせて修正
+                    if (BufferedImage.TYPE_4BYTE_ABGR == img.getType()) {
+                        newcolor+=0xff000000;
+                    }
                     // 新しい色を(grad_x,grad_y)に設定
                     newimg.setRGB(grad_x, grad_y, newcolor);
-                    }
+                }
 
         }
         // pb.setValue(100);
