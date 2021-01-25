@@ -32,6 +32,10 @@ public class Settings{
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");//日付を文字列化するときのフォーマットを指定
             fileName = dateFormat.format(date);//日付を文字列化してFileNameへ
         }
+        //保存場所が空白の場合
+        if(path==""){
+            path = System.getProperty("user.home")+"\\Pictures\\img";
+        }
         //primarySizeにdefaultSizeを入れる
         primarySize = new Dimension(defaultSize.width,defaultSize.height);
     }

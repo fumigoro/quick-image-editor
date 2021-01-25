@@ -20,6 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import javax.imageio.*;
 
@@ -51,6 +52,8 @@ public class MainWindow extends JFrame {
     JMenuBar menubar;
     JMenu menu_1, menu_2, menu_3;
     JMenuItem menuitem1_1, menuitem1_2, menuitem1_3, menuitem3_resetCount, menuitem3_setDefaultDir;
+    JProgressBar pb;
+
     String format;// 画像のファイル形式
 
     EditWindow editWindow;
@@ -70,7 +73,8 @@ public class MainWindow extends JFrame {
 
     Settings setting;// 設定ファイルから読み込んだ設定を保存する
     // 設定ファイルsettings.jsonの場所を指定
-    final String SETTING_FILE_PATH = "src/main/resources/settings.json";
+    static final String SETTING_FILE_PATH = "src/main/resources/settings.json";
+    // static final String INIT_FILE_PATH = "src/main/resources/common.properties";
 
     /**
      * コンストラクタ
@@ -84,6 +88,9 @@ public class MainWindow extends JFrame {
             // 読み込み失敗時は以降の処理を行わない
             return;
         }
+        // propertiesファイルの読み込み
+        // ResourceBundle rb = ResourceBundle.getBundle(INIT_FILE_PATH);
+        // System.out.println(rb.getString("id"));
         // 各種UI部品をつくる
         createMainWindow();
         imageCounter = 0;
@@ -204,8 +211,6 @@ public class MainWindow extends JFrame {
                 imageCounter++;
                 // クリップボード上のデータを取得しBufferedImageへキャスト
                 BufferedImage img = (BufferedImage) clip.getData(DataFlavor.imageFlavor);// 例外：UnsupportedFlavorException
-                // TODO: 各種加工処理
-                
                 //ぼかし
                 for(int i=0;i<taskList.size();i++){
                     Task tmpTask = taskList.get(i);
@@ -213,10 +218,15 @@ public class MainWindow extends JFrame {
                     if(tmpTask.active){
                         //設定された加工内容がぼかしかを確認
                         if(tmpTask.type==2){
+                            System.out.println("ぼかし適用中...");
+                            // panel_L3.add(this.pb);
                             img = tmpTask.run(img);
+                            System.out.println("完了");
+
                         }
                     }
                 }
+
                 
                 
                 //トリミング
@@ -226,7 +236,7 @@ public class MainWindow extends JFrame {
                     if(tmpTask.active){
                         //設定された加工内容がトリミングかを確認
                         if(tmpTask.type==1){
-                            System.out.printf("読み込み時画像:%d,%d\n",img.getWidth(),img.getHeight());
+                            // System.out.printf("読み込み時画像:%d,%d\n",img.getWidth(),img.getHeight());
                             img = tmpTask.run(img);
                             break;//トリミングは1回だけ
                         }
@@ -248,8 +258,10 @@ public class MainWindow extends JFrame {
                         + setting.format;
                 // 作成したファイルを書き出し(保存)
                 ImageIO.write(img, setting.format, new File(file));// 例外：IOException
-                System.out.println(file);
-                System.out.println("saved");
+                // System.out.println(file);
+                // System.out.println("saved");
+                pb.setValue(0);
+
                 updateMessage("保存完了：" + setting.fileName + "_" + (String.valueOf(imageCounter)) + "." + setting.format);
             } catch (UnsupportedFlavorException e1) {
                 e1.printStackTrace();
@@ -315,7 +327,18 @@ public class MainWindow extends JFrame {
         // panel_L2.setLayout(new GridLayout(1,10));
         // panel_L2.setLayout(new BoxLayout(mainFlame.getContentPane(), BoxLayout.PAGE_AXIS));
         panel_L2.setLayout(new FlowLayout());
-        panel_L.add(panel_L2);
+        panel_L.add("Center",panel_L2);
+
+        // JPanel panel_L3 = new JPanel();
+        // Border lineBorder_L3 = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
+        // TitledBorder titledBorder_L3 = BorderFactory.createTitledBorder(lineBorder_L3, "あああ");
+        // panel_L3.setBorder(titledBorder_L3);
+        // pb = new JProgressBar();
+        // pb.setPreferredSize(new Dimension(250, 20));
+        // pb.setValue(0);
+        // panel_L3.add(pb);
+        // panel_L.add("South",panel_L3);
+
         mainFlame.add(panel_L);
 
         panel_R = new JPanel();
@@ -416,13 +439,13 @@ public class MainWindow extends JFrame {
         menuitem1_2 = new JMenuItem("Exit");
         menuitem1_3 = new JMenuItem("保存場所を開く");
         menuitem3_resetCount = new JMenuItem("連番をリセット");
-        menuitem3_setDefaultDir = new JMenuItem("現在の保存場所をデフォルトに設定");
+        // menuitem3_setDefaultDir = new JMenuItem("現在の保存場所をデフォルトに設定");
         menu_1.add(menuitem1_1);
         menu_1.add(menuitem1_2);
         menu_1.add(menuitem1_3);
 
         menu_3.add(menuitem3_resetCount);
-        menu_3.add(menuitem3_setDefaultDir);
+        // menu_3.add(menuitem3_setDefaultDir);
         menubar.add(menu_1);
         menubar.add(menu_2);
         menubar.add(menu_3);
@@ -574,7 +597,7 @@ public class MainWindow extends JFrame {
 
                 break;
             case 2://ぼかし
-                labelText = "ぼかし "+taskList.get(countTasks).getRangeS()+"size:"+task.getGradSizeAsString();
+                labelText = "ぼかし "+taskList.get(countTasks).getRangeS()+"  "+task.getGradSizeAsString();
                 break;
             // case 3://リサイズ
             //     labelText = "リサイズ"

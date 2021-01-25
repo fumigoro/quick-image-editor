@@ -113,7 +113,7 @@ public class EditWindow extends JFrame {
         image = getClipboardImage();
 
         if (image != null) {
-            System.out.printf("編集画面立ち上げ時画像(縮小あと):%d,%d\n", image.getWidth(), image.getHeight());
+            // System.out.printf("編集画面立ち上げ時画像(縮小あと):%d,%d\n", image.getWidth(), image.getHeight());
             // System.out.printf("編集画面立ち上げ時画像(縮小あと):%d,%d\n",scaledWidth,scaledHeight);
             // EditCanvasのインスタンスを生成
             canvas = new EditCanvas(scaledWidth, scaledHeight, scale, image);
@@ -125,7 +125,7 @@ public class EditWindow extends JFrame {
             btn_addTrim.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     canvas.task.setType(1);// 加工種類をトリミングに設定
-                    System.out.println("set:1");
+                    // System.out.println("set:1");
                     if (canvas.mode != 1) {
                         canvas.mode = -1;
                         btn_addTrim.setBackground(new Color(82, 165, 255));
@@ -141,7 +141,7 @@ public class EditWindow extends JFrame {
             btn_addGrad.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     canvas.task.setType(2);// 加工種類をぼかしに設定
-                    System.out.println("set:2");
+                    // System.out.println("set:2");
                     if (canvas.mode != 1) {
                         canvas.mode = -1;
                         btn_addGrad.setBackground(new Color(82, 165, 255));
@@ -186,7 +186,7 @@ public class EditWindow extends JFrame {
         try {
             // buferedImageにキャストして代入
             BufferedImage img = (BufferedImage) clip.getData(DataFlavor.imageFlavor);
-            System.out.printf("編集画面立ち上げ時画像(縮小前):%d,%d\n", img.getWidth(), img.getHeight());
+            // System.out.printf("編集画面立ち上げ時画像(縮小前):%d,%d\n", img.getWidth(), img.getHeight());
 
             // 縮小後の縦横サイズを保持する変数
             scaledWidth = img.getWidth();
@@ -203,8 +203,8 @@ public class EditWindow extends JFrame {
                 scaledHeight = (int) (scaledWidth * img.getHeight() / img.getWidth());
                 scale = ((double) scaledWidth / (double) img.getWidth());
             }
-            System.out.println((double) scaledWidth / (double) img.getWidth());
-            System.out.println(1.0 / 20.0);
+            // System.out.println((double) scaledWidth / (double) img.getWidth());
+            // System.out.println(1.0 / 20.0);
 
             // 画像がウィンドウに収まるように縮小
             // 縮小を行っているgetScaledInstanceImageメソッドは戻り値がImageなので、Graphicsを使ってBufferedImageへの変換も行う
