@@ -1,15 +1,6 @@
 package quick.image.editor;
 
 import java.awt.*;
-import javax.swing.*;
-
-import javax.swing.JSlider;
-import javax.swing.border.*;
-import javax.swing.event.*;
-
-
-import quick.image.editor.Task;
-
 import java.awt.event.*;
 import java.awt.image.*;
 import java.awt.Toolkit;
@@ -19,6 +10,11 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+
+import javax.swing.*;
+import javax.swing.JSlider;
+import javax.swing.border.*;
+import javax.swing.event.*;
 
 public class EditWindow extends JFrame {
     // 画像エリアのサイズ
@@ -52,12 +48,13 @@ public class EditWindow extends JFrame {
     JSlider grad_slider;
     JLabel sliderLabel;
 
-    /**編集ウィンドウが立ち上げられたときに呼ばれるコンストラクタ */
+    /** 編集ウィンドウが立ち上げられたときに呼ばれるコンストラクタ */
     EditWindow() {
         createEditWindow();
         isInstantiated = true;
     }
-    /**MainWindow起動時にリスナー設定で必要なため、UI表示を行わずインスタンス化するときに使う特別なコンストラクタ */
+
+    /** MainWindow起動時にリスナー設定で必要なため、UI表示を行わずインスタンス化するときに使う特別なコンストラクタ */
     EditWindow(boolean dummy) {
         isInstantiated = false;
     }
@@ -89,7 +86,6 @@ public class EditWindow extends JFrame {
         btn_addTrim.setPreferredSize(new Dimension(MENU_W - 50, 50));
         panel_side1.add(btn_addTrim);
 
-        
         JPanel panel_side2 = new JPanel();
         panel_side2.setLayout(new BorderLayout());
         Border lineBorder_2 = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
@@ -99,14 +95,15 @@ public class EditWindow extends JFrame {
         btn_addGrad = new JButton("ぼかし");
         btn_addGrad.setBackground(new Color(255, 255, 255));
         btn_addGrad.setPreferredSize(new Dimension(MENU_W - 50, 50));
-        panel_side2.add(btn_addGrad,BorderLayout.NORTH);
+        panel_side2.add(btn_addGrad, BorderLayout.NORTH);
 
         grad_slider = new JSlider();
-        panel_side2.add(grad_slider,BorderLayout.CENTER);
+        panel_side2.add(grad_slider, BorderLayout.CENTER);
         sliderLabel = new JLabel();
-        sliderLabel.setText(String.valueOf(sliderValue)+"% : "+String.valueOf( (int) ((double) Task.GRAD_SIZE_MAX * ((double) sliderValue / 100.0))*2+1)+"px");
+        sliderLabel.setText(String.valueOf(sliderValue) + "% : "
+                + String.valueOf((int) ((double) Task.GRAD_SIZE_MAX * ((double) sliderValue / 100.0)) * 2 + 1) + "px");
 
-        panel_side2.add(sliderLabel,BorderLayout.SOUTH);
+        panel_side2.add(sliderLabel, BorderLayout.SOUTH);
 
         panel_side.add(panel_side1);
         panel_side.add(panel_side2);
@@ -115,7 +112,8 @@ public class EditWindow extends JFrame {
         image = getClipboardImage();
 
         if (image != null) {
-            // System.out.printf("編集画面立ち上げ時画像(縮小あと):%d,%d\n", image.getWidth(), image.getHeight());
+            // System.out.printf("編集画面立ち上げ時画像(縮小あと):%d,%d\n", image.getWidth(),
+            // image.getHeight());
             // System.out.printf("編集画面立ち上げ時画像(縮小あと):%d,%d\n",scaledWidth,scaledHeight);
             // EditCanvasのインスタンスを生成
             canvas = new EditCanvas(scaledWidth, scaledHeight, scale, image);
@@ -155,13 +153,17 @@ public class EditWindow extends JFrame {
                 }
             });
 
-            //ぼかしサイズのスライダーのリスナー設定
-            grad_slider.addChangeListener(new ChangeListener(){
-                public void stateChanged(ChangeEvent e){
+            // ぼかしサイズのスライダーのリスナー設定
+            grad_slider.addChangeListener(new ChangeListener() {
+                public void stateChanged(ChangeEvent e) {
                     sliderValue = grad_slider.getValue();
-                    sliderLabel.setText(String.valueOf(sliderValue)+"% : "+String.valueOf( (int) ((double) Task.GRAD_SIZE_MAX * ((double) sliderValue / 100.0))*2+1)+"px");
-                    
-                    // sliderLabel.setText(String.valueOf(sliderValue)+"% : "+String.valueOf( (int) ((double) this.GRAD_SIZE_MAX * ((double) size / 100.0))*2+1)+"px");
+                    sliderLabel.setText(String.valueOf(sliderValue) + "% : "
+                            + String.valueOf(
+                                    (int) ((double) Task.GRAD_SIZE_MAX * ((double) sliderValue / 100.0)) * 2 + 1)
+                            + "px");
+
+                    // sliderLabel.setText(String.valueOf(sliderValue)+"% : "+String.valueOf( (int)
+                    // ((double) this.GRAD_SIZE_MAX * ((double) size / 100.0))*2+1)+"px");
                 }
             });
 
@@ -190,7 +192,8 @@ public class EditWindow extends JFrame {
         try {
             // buferedImageにキャストして代入
             BufferedImage img = (BufferedImage) clip.getData(DataFlavor.imageFlavor);
-            // System.out.printf("編集画面立ち上げ時画像(縮小前):%d,%d\n", img.getWidth(), img.getHeight());
+            // System.out.printf("編集画面立ち上げ時画像(縮小前):%d,%d\n", img.getWidth(),
+            // img.getHeight());
 
             // 縮小後の縦横サイズを保持する変数
             scaledWidth = img.getWidth();
@@ -237,7 +240,7 @@ public class EditWindow extends JFrame {
      */
     public Task getTask() {
         if (isInstantiated && this.isImage()) {
-            //ぼかしの程度を決めるスライダーの値(0~100)をセット
+            // ぼかしの程度を決めるスライダーの値(0~100)をセット
             canvas.task.setGradSize(this.sliderValue);
             return canvas.task;
         } else {
@@ -316,7 +319,7 @@ class EditCanvas extends Canvas implements MouseListener, MouseMotionListener {
 
         g2d.drawImage(image, 0, 0, null);
         switch (mode) {
-            //マウスドラッグ中
+            // マウスドラッグ中
             case 1:
                 if (x < px) {
                     sx = x;
@@ -338,7 +341,7 @@ class EditCanvas extends Canvas implements MouseListener, MouseMotionListener {
                 g2d.setColor(Color.ORANGE);
                 g2d.drawRect(sx, sy, ow - 1, oh - 1);
                 break;
-            //ドラッグ開始前
+            // ドラッグ開始前
             case -1:
                 g2d.setColor(new Color(21, 97, 178, 80));
                 g2d.fillRect(0, 0, width, height);

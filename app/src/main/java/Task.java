@@ -1,11 +1,12 @@
 package quick.image.editor;
 
-import java.awt.Dimension;
-import javax.swing.*;
 import java.awt.*;
+import java.awt.Dimension;
 import java.awt.event.*;
 import java.awt.image.*;
 import java.lang.Math;
+
+import javax.swing.*;
 
 public class Task {
     public int type;
