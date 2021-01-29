@@ -1,4 +1,4 @@
-## プログラミング実践1 最終課題の作品
+## 2020年度プログラミング実践1 最終課題の作品
 
 ソースコード本体は```/app/src/main/java```の中に、外部の設定ファイル```settings.json```と```config.properties```は```/app/src/main/resources```にあります。
 
@@ -20,4 +20,3 @@ gradle runコマンドで依存ライブラリの取得やコンパイル、実�
 cd quick-image-editor
 gradle run
 ```
-
