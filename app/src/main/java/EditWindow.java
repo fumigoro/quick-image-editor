@@ -67,7 +67,7 @@ public class EditWindow extends JFrame {
      */
     private void createEditWindow() {
         // ウィンドウ作成
-        editFrame = new JFrame("Edit");
+        editFrame = new JFrame("タスクの追加");
         // 位置とサイズを指定
         editFrame.setBounds(50, 50, CANVAS_W + MENU_W, CANVAS_H + 100);
         panel_image = new JPanel();

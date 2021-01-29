@@ -342,7 +342,7 @@ public class MainWindow extends JFrame {
         btn_go.setBackground(new Color(82, 165, 255));
         btn_go.setFont(new Font("Arial", Font.BOLD, 16));
 
-        btn_addEditTask = new JButton("新規");
+        btn_addEditTask = new JButton("タスク追加");
         panel_L1.setLayout(new GridLayout(1, 2));
         panel_L1.setPreferredSize(new Dimension(300, 50));
         panel_L1.add(btn_go);
