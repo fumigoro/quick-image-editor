@@ -111,27 +111,33 @@ public class EditWindow extends JFrame {
         // クリップボードから画像取得してフレーム内に表示
         image = getClipboardImage();
 
+        // 画像があるか確認
         if (image != null) {
-            // System.out.printf("編集画面立ち上げ時画像(縮小あと):%d,%d\n", image.getWidth(),
-            // image.getHeight());
-            // System.out.printf("編集画面立ち上げ時画像(縮小あと):%d,%d\n",scaledWidth,scaledHeight);
             // EditCanvasのインスタンスを生成
             canvas = new EditCanvas(scaledWidth, scaledHeight, scale, image);
-            // JPanel pane = new JPanel();
             editFrame.getContentPane().add(panel_image);
             panel_image.add(canvas, BorderLayout.CENTER);
 
-            // トリミングボタンのリスナー設定
+            // トリミングボタン(toggle)のリスナー設定
             btn_addTrim.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     canvas.task.setType(1);// 加工種類をトリミングに設定
-                    // System.out.println("set:1");
+                    /**
+                     * canvas.mode 1:マウスドラッグ中 -1:マウスドラッグ待機状態(ドラッグする前)
+                     */
+                    // ドラッグ中でない場合
                     if (canvas.mode != 1) {
+                        // ドラッグ待機状態へ
                         canvas.mode = -1;
+                        // ボタンを青色に
                         btn_addTrim.setBackground(new Color(82, 165, 255));
+                        // 再描画
                         canvas.repaint();
                     } else {
+                        // ドラッグ中の場合
+                        // ドラッグ可能状態を終了
                         canvas.mode = 0;
+                        // ボタンを白に
                         btn_addTrim.setBackground(new Color(255, 255, 255));
                     }
                 }
@@ -141,13 +147,22 @@ public class EditWindow extends JFrame {
             btn_addGrad.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     canvas.task.setType(2);// 加工種類をぼかしに設定
-                    // System.out.println("set:2");
+                    /**
+                     * canvas.mode 1:マウスドラッグ中 -1:マウスドラッグ待機状態(ドラッグする前)
+                     */
+                    // ドラッグ中でない場合
                     if (canvas.mode != 1) {
+                        // ドラッグ待機状態へ
                         canvas.mode = -1;
+                        // ボタンを青色に
                         btn_addGrad.setBackground(new Color(82, 165, 255));
+                        // 再描画
                         canvas.repaint();
                     } else {
+                        // ドラッグ中の場合
+                        // ドラッグ可能状態を終了
                         canvas.mode = 0;
+                        // ボタンを白に
                         btn_addGrad.setBackground(new Color(255, 255, 255));
                     }
                 }
@@ -155,21 +170,22 @@ public class EditWindow extends JFrame {
 
             // ぼかしサイズのスライダーのリスナー設定
             grad_slider.addChangeListener(new ChangeListener() {
+                /**
+                 * スライダーが操作された時の呼ばれるメソッド スライダーの値を変数に格納し、GUIにも表示する
+                 * 
+                 * @param e
+                 */
                 public void stateChanged(ChangeEvent e) {
+                    // スライダーの値を変数に格納
                     sliderValue = grad_slider.getValue();
+                    // GUIにも表示
                     sliderLabel.setText(String.valueOf(sliderValue) + "% : "
                             + String.valueOf(
                                     (int) ((double) Task.GRAD_SIZE_MAX * ((double) sliderValue / 100.0)) * 2 + 1)
                             + "px");
 
-                    // sliderLabel.setText(String.valueOf(sliderValue)+"% : "+String.valueOf( (int)
-                    // ((double) this.GRAD_SIZE_MAX * ((double) size / 100.0))*2+1)+"px");
                 }
             });
-
-            // picLabel = new JLabel(new ImageIcon(image));
-            // picLabel.setLayout(new BorderLayout());
-            // panel_image.add(picLabel, BorderLayout.CENTER);
 
             editFrame.add(panel_image, BorderLayout.WEST);
             editFrame.add(panel_side, BorderLayout.EAST);
@@ -210,8 +226,6 @@ public class EditWindow extends JFrame {
                 scaledHeight = (int) (scaledWidth * img.getHeight() / img.getWidth());
                 scale = ((double) scaledWidth / (double) img.getWidth());
             }
-            // System.out.println((double) scaledWidth / (double) img.getWidth());
-            // System.out.println(1.0 / 20.0);
 
             // 画像がウィンドウに収まるように縮小
             // 縮小を行っているgetScaledInstanceImageメソッドは戻り値がImageなので、Graphicsを使ってBufferedImageへの変換も行う
@@ -219,18 +233,24 @@ public class EditWindow extends JFrame {
             Graphics2D g = bimg.createGraphics();
             g.drawImage(img.getScaledInstance(scaledWidth, scaledHeight, Image.SCALE_AREA_AVERAGING), 0, 0, null);
             g.dispose();
+            // 画像が用意できたのでフラグを上げる
             isImage = true;
             return bimg;
         } catch (Exception e) {
             // エラーハンドリング(主にclip.getData()に対するクリップボードの中身が画像でない場合の例外処理)
             // System.out.println("クリップボードの中身が画像ではありません");
+            // クリップボードの中身が画像でない場合でもこのメソッドが呼ばれ、このExceptionは想定内のためprintStackTrace()せずに処理を続行
             // e.printStackTrace();
             isImage = false;
             return null;
         }
     }
 
-    // クリップボードに画像があるか確かめるメソッド
+    // 画像を取り込めたか(クリップボードに画像があったか)確かめるメソッド
+    /**
+     * 
+     * @return 画像があるか否かの真理値
+     */
     public boolean isImage() {
         return isImage;
     }
@@ -239,6 +259,7 @@ public class EditWindow extends JFrame {
      * 設定されたTaskオブジェクトを返す
      */
     public Task getTask() {
+        // ダミーで作られた非表示のウィンドウではないか、画像をとりこめているかを確認
         if (isInstantiated && this.isImage()) {
             // ぼかしの程度を決めるスライダーの値(0~100)をセット
             canvas.task.setGradSize(this.sliderValue);
@@ -246,172 +267,6 @@ public class EditWindow extends JFrame {
         } else {
             return null;
         }
-
     }
 
-}
-
-// キャンバスクラス
-class EditCanvas extends Canvas implements MouseListener, MouseMotionListener {
-
-    // 描画内容を保持するBufferedImage
-    BufferedImage cImage = null;
-    // 加工する画像
-    BufferedImage image = null;
-    // cImageに描画するためのインスタンス
-    // private Graphics2D g2d;
-    Graphics g2d;
-    // 線の開始座標・終了座標
-    // private int x, y, xx, yy;
-    // 線の色
-    Color c = Color.black;
-    // 描画モードＯＲ消しゴムモード
-    public int mode;
-    // 画像のサイズ
-    int width, height;
-    // マウスポインターの現在位置座標
-    int x, y;
-    // ドラッグ開始座標
-    int px, py;
-    // マウスをドラッグして描く四角の縦横
-    int ow, oh;
-    // マウスをドラッグして描く四角の支点
-    int sx, sy;
-    // 加工内容を表すデータ
-    public Task task = new Task();
-    // 表示している画像の縮小倍率
-    double scale;
-
-    EditCanvas(int w, int h, double scale, BufferedImage image) {
-        this.image = image;
-        width = w;
-        height = h;
-        this.scale = scale;
-        // 座標を初期化
-        x = -1;
-        y = -1;
-        px = -1;
-        py = -1;
-        mode = 0;
-        ow = 0;
-        oh = 0;
-        // リスナー設定
-        addMouseListener(this);
-        addMouseMotionListener(this);
-        // キャンバスの背景を白に設定
-
-        setBackground(new Color(238, 238, 238));
-
-        // 描画内容を保持するBufferedImageを生成
-        cImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        g2d = cImage.getGraphics();
-        // BufferedImageの背景も白にする
-        // g2d.setColor(Color.GREEN);
-        // g2d.fillRect(0, 0, 200, 200);
-        g2d.drawImage(image, 0, 0, null);
-        // 描画
-        repaint();
-    }
-
-    public void paint(Graphics g) {
-        // System.out.println("paint");
-        // System.out.println(mode);
-
-        g2d.drawImage(image, 0, 0, null);
-        switch (mode) {
-            // マウスドラッグ中
-            case 1:
-                if (x < px) {
-                    sx = x;
-                } else {
-                    sx = px;
-                }
-                if (y < py) {
-                    sy = y;
-                } else {
-                    sy = py;
-                }
-                // System.out.println(ow);
-                g2d.setColor(new Color(21, 97, 178, 80));
-                g2d.fillRect(0, 0, width, sy);
-                g2d.fillRect(0, sy, sx, oh);
-                g2d.fillRect(sx + ow, sy, width - ow - sx, oh);
-                g2d.fillRect(0, sy + oh, width, height - sy - oh);
-
-                g2d.setColor(Color.ORANGE);
-                g2d.drawRect(sx, sy, ow - 1, oh - 1);
-                break;
-            // ドラッグ開始前
-            case -1:
-                g2d.setColor(new Color(21, 97, 178, 80));
-                g2d.fillRect(0, 0, width, height);
-                mode = 1;
-        }
-        g.drawImage(cImage, 0, 0, null);
-    }
-
-    // フレームに何らかの更新が行われた時の処理
-    @Override
-    public void update(Graphics g) {
-        paint(g); // 下記の paint を呼び出す
-    }
-
-    @Override
-    public void mouseDragged(MouseEvent e) {
-        x = clamp(e.getX(), width);
-        y = clamp(e.getY(), height);
-        // System.out.println(px);
-        ow = Math.abs(x - px);
-        oh = Math.abs(y - py);
-        repaint();
-    }
-
-    @Override
-    public void mouseMoved(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        x = clamp(e.getX(), width);
-        y = clamp(e.getY(), height);
-        px = clamp(e.getX(), width);
-        py = clamp(e.getY(), height);
-
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        // mode = 0;
-        // 加工内容を表すデータ
-        task.setRange(undoScale(sx), undoScale(sy), undoScale(ow), undoScale(oh));
-
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-    }
-
-    private int clamp(int n, int max) {
-        if (n < 0) {
-            return 0;
-        }
-        if (n > max) {
-            return max;
-        }
-        return n;
-    }
-
-    private int undoScale(int n) {
-        double n2 = n;
-        int res = (int) (n2 / scale);
-        return res;
-    }
 }

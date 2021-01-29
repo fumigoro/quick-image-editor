@@ -9,19 +9,19 @@
     "format": "png",
     //画像のサイズを変更するかどうか
     "resize": false,
-    //画像のサイズを変更するかどうか
+    //画像の縦横比を保持するかどうか
     "fixAspectRatio": true,
     //出力画像のサイズ
-    "defaultSize":{
+    "defaultSize": {
         "height": 1080,
         "width": 1920
     },
     //出力画像のサイズプリセット
-    "presetSize1":{
+    "presetSize1": {
         "height": 1080,
         "width": 1920
     },
-    "presetSize2":{
+    "presetSize2": {
         "height": 540,
         "width": 960
     },

@@ -506,8 +506,8 @@ public class MainWindow extends JFrame {
 
         try {
             mapper.configure(Feature.ALLOW_COMMENTS, true);// (重要)これによりJOSNにコメントが入れれるようになる
+            // 読み込んだJSONをSettingsクラスのインスタンスに変換
             this.setting = mapper.readValue(new File(SETTING_FILE_PATH), Settings.class);
-            // this.setting.setDay();
             this.setting.init();
             // System.out.println("設定読み込み完了");
             return true;
@@ -515,6 +515,7 @@ public class MainWindow extends JFrame {
             e.printStackTrace();
             // 読み込み失敗時
             System.out.println("失敗");
+            // 読み込みに失敗した旨のダイアログを表示
             showErrorDialog(e, "設定ファイルの読み込みに失敗しました。");
             return false;
         }
@@ -544,7 +545,9 @@ public class MainWindow extends JFrame {
 
         // オリジナルの画像の縦横比
         int asp_original = targetImage.getHeight() / targetImage.getWidth();
+        // GUIで設定された画像サイズの縦横比
         int asp_setting = setting.primarySize.height / setting.primarySize.height;
+
         if (setting.fixAspectRatio) {// 縦横比を固定する場合
             // 指定の出力サイズsetting.defaultSizeを上回る場合に縮小する
             if (asp_original >= asp_setting && targetImage.getHeight() > setting.primarySize.height) {

@@ -8,6 +8,9 @@ import java.lang.Math;
 
 import javax.swing.*;
 
+/**
+ * 加工内容と実際に加工を行うメソッドを持つクラス
+ */
 public class Task {
     public int type;
     public JLabel label;
